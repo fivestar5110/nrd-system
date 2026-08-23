@@ -443,7 +443,15 @@
         <button class="mecha-btn" style="width:100%; border-color:var(--neon-pink); color:var(--neon-pink); font-weight:bold; margin-bottom:15px;" onclick="SeriesManager.mergePilots()">[ 🔗 MERGE PILOTS (統合実行) ]</button>
 
         <div style="margin-top:20px; border-top:1px dashed #555; padding-top:15px; text-align:right;">
-           <button class="mecha-btn btn-export" onclick="SeriesManager.exportSeriesCSV()">[ 💾 EXPORT SERIES CSV ]</button>
+           <button class="mecha-btn btn-export" onclick="SeriesManager.exportSeriesCSV()" style="margin-bottom:10px; width:100%;">[ 💾 EXPORT SERIES CSV (閲覧用) ]</button>
+           
+           <div style="display:flex; gap:10px; justify-content:flex-end;">
+               <label class="mecha-btn" style="flex:1; border-color:var(--neon-yellow); color:var(--neon-yellow); text-align:center; cursor:pointer;">
+                  [ 📥 IMPORT DATA (復元) ] <input type="file" accept=".json" style="display:none;" onchange="SeriesManager.importSeriesJSON(event)">
+               </label>
+               <button class="mecha-btn" style="flex:1; border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="SeriesManager.exportSeriesJSON()">[ 📤 EXPORT DATA (保存) ]</button>
+           </div>
+           <div style="font-size:9px; color:#aaa; margin-top:5px; text-align:left;">※別のPCへデータを引き継ぐ場合は、上記の IMPORT / EXPORT (JSON形式) を使用してください。</div>
         </div>
       </div>
     </div>
@@ -1672,6 +1680,58 @@
         link.click(); 
         document.body.removeChild(link);
         sysLog(`Exported Series CSV: ${series.name}`);
+    }, // ← カンマを忘れないように注意
+
+    // ⚡ 追加: システムバックアップ用JSONのエクスポート（引き継ぎ用）
+    exportSeriesJSON: async function() {
+        if (Object.keys(this.seriesList).length === 0) {
+            await showCustomDialog("バックアップするシリーズデータがありません。", false);
+            return;
+        }
+        const dataStr = JSON.stringify(this.seriesList, null, 2);
+        const encodedUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+        const link = document.createElement("a");
+        const dateStr = new Date().toISOString().split('T')[0];
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `WTW_SERIES_BACKUP_${dateStr}.json`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        sysLog(`Exported Series JSON Backup.`);
+    },
+
+    // ⚡ 追加: システムバックアップ用JSONのインポート（引き継ぎ用）
+    importSeriesJSON: function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            try {
+                const importedData = JSON.parse(ev.target.result);
+                if (typeof importedData !== 'object' || Array.isArray(importedData)) {
+                    throw new Error("フォーマットが不正です");
+                }
+                
+                if (await showCustomDialog(`バックアップデータ（${Object.keys(importedData).length}件のシリーズ）を読み込みますか？\n（現在のPCにあるデータに追加・上書きマージされます）`, true)) {
+                    // マージ処理
+                    for (const key in importedData) {
+                        this.seriesList[key] = importedData[key];
+                    }
+                    await this.save();
+                    this.renderSeriesMgrModal();
+                    if (this.activeSeriesId && this.seriesList[this.activeSeriesId]) {
+                         this.renderSeriesView();
+                    }
+                    await showCustomDialog("シリーズデータのインポートが完了し、システムに復元されました。", false);
+                    sysLog(`Imported Series JSON Backup.`);
+                }
+            } catch (err) {
+                await showCustomDialog("読み込みに失敗しました。正しいバックアップファイル(.json)を選択してください。", false);
+                sysLog(`Import Series JSON Error: ${err.message}`, 'error');
+            }
+            e.target.value = ''; // Inputリセット
+        };
+        reader.readAsText(file, 'UTF-8');
     }
   };
 
