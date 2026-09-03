@@ -570,6 +570,17 @@
               <label style="color: var(--neon-pink);">LAPS:</label>
               <input type="number" id="raceLapsInput" value="3" min="1">
             </div>
+            <!-- ⚡ 追加: オートネクスト & オートフィニッシュタイマー設定パネル -->
+            <div class="mecha-panel" style="border-color:var(--neon-yellow);">
+              <label style="color:var(--neon-yellow);">AUTO NEXT:</label>
+              <input type="number" id="autoNextSecInput" value="30" min="5" style="width:40px;">
+              <span style="font-size:10px; color:#aaa; margin-right:4px;">s</span>
+              <button id="btnToggleAutoNext" class="mecha-btn">OFF</button>
+            </div>
+            <div class="mecha-panel" style="border-color:var(--neon-pink);">
+              <label style="color:var(--neon-pink);">AUTO FINISH:</label>
+              <button id="btnToggleAutoFinish" class="mecha-btn">OFF</button>
+            </div>
             <div class="db-search-wrapper">
               <span class="db-search-icon">🔍</span>
               <input type="text" id="pilotSearchInput" class="db-search-input" placeholder="PILOT DB..." autocomplete="off">
@@ -677,6 +688,8 @@
                   <option value="mains" style="color:var(--neon-cyan); font-weight:bold;">A/B MAINS (クラス別/Bump-Up)</option>
                   <option value="stepup">STEP-UP (下克上 / 勝ち抜き戦)</option>
                   <option value="placement" style="color:var(--neon-green);">PLACEMENT (予選用 / 勝ち抜けなし)</option>
+                  <!-- ⚡ 追加: 固定グループ・連続フライト -->
+                  <option value="fixed" style="color:var(--neon-cyan); font-weight:bold;">FIXED GROUPS (固定グループ・連続フライト)</option>
                   <!-- ⚡ 追加: ポイント戦の選択肢 -->
                   <option value="points" style="color:var(--neon-pink);">POINTS (固定メンバー・ポイント周回戦)</option>
                   <!-- ⚡ 追加: 勝ち抜き戦の選択肢 -->
@@ -1744,6 +1757,14 @@
     heats: [],
     draftHeats: [],
     globalHeatCounter: 1,
+    pendingCommand: null, // ⚡ 追加: TVPへの送信コマンド保持用
+
+    // ⚡ 追加: オートタイマー管理用変数
+    isAutoNextEnabled: false,
+    isAutoFinishEnabled: false, // ⚡ 追加: 自動確定フラグ
+    autoNextTimerId: null,
+    autoNextHeatId: null,
+    autoNextRemaining: 0,
 
     // ⚡ 追加: 周波数アシスト機能 ロジック部
     availableBands: ['E2', 'E1', 'F3', 'F5'],
@@ -2297,7 +2318,7 @@
         document.getElementById('pointsSettings').style.display = 'none';
 
         if (format === 'mains') { document.getElementById('mainsSettings').style.display = 'block'; } 
-        else if (format === 'points') { document.getElementById('pointsSettings').style.display = 'block'; }
+        else if (format === 'points' || format === 'fixed') { document.getElementById('pointsSettings').style.display = 'block'; }
         else { document.getElementById('standardSettings').style.display = 'block'; }
     },
 
@@ -2327,7 +2348,7 @@
             perHeat = parseInt(document.getElementById('mainsPerHeat').value, 10); classSize = parseInt(document.getElementById('mainsClassSize').value, 10);
             bumpUp = parseInt(document.getElementById('mainsBumpUp').value, 10); advK = bumpUp;
             if(isNaN(classSize) || isNaN(bumpUp) || classSize <= bumpUp) { await showCustomDialog("クラス定員と昇格人数の設定が不正です。", false); return; }
-        } else if (format === 'points') {
+        } else if (format === 'points' || format === 'fixed') {
             rankStart = 1; rankEnd = 999; // 抽出の制限を無効化し全員を対象にする
             perHeat = parseInt(document.getElementById('pointsPerHeat').value, 10); advK = 0;
         } else if (format === 'king') {
@@ -2372,7 +2393,30 @@
 
         let generatedDraftHeats = [];
 
-        if (format === 'snake') {
+        if (format === 'fixed') {
+            // ⚡ FIXED GROUPS: シャッフルなしで上から順にグループ化し、完全に固定したまま繰り返す
+            let numRounds = parseInt(document.getElementById('pointsRounds').value, 10) || 3;
+            let groups = [];
+            let pool = [...qualifiedPilots];
+            let groupIndex = 1;
+            
+            while(pool.length > 0) {
+                groups.push({
+                    name: `GROUP ${String.fromCharCode(64 + groupIndex)}`, // A, B, C...
+                    pilots: pool.splice(0, perHeat)
+                });
+                groupIndex++;
+            }
+            
+            for (let r = 1; r <= numRounds; r++) {
+                groups.forEach((g) => {
+                    generatedDraftHeats.push({
+                        name: `ROUND ${r} - ${g.name}`,
+                        pilots: [...g.pilots]
+                    });
+                });
+            }
+        } else if (format === 'snake') {
           let currentRoundPilots = [...qualifiedPilots]; let roundNum = 1; let safetyCounter = 0; let allEliminatedInPrevRound = [];
           while (currentRoundPilots.length > 1 && safetyCounter < 50) {
             safetyCounter++; let numHeats = Math.ceil(currentRoundPilots.length / perHeat);
@@ -2803,6 +2847,79 @@
         }
     },
 
+    // ⚡ 追加: TVPへ任意のコマンドを発射する汎用メソッド
+    sendTVPCommand: function(cmd) {
+        this.pendingCommand = cmd;
+        this.syncToTVP();
+        sysLog(`Command '${cmd}' sent to TVP.`);
+    },
+
+    // ⚡ 追加: インターバルタイマーの開始処理
+    startCountdown: function(heatId) {
+        if(this.autoNextTimerId) clearInterval(this.autoNextTimerId);
+        this.autoNextHeatId = heatId;
+        this.autoNextRemaining = parseInt(document.getElementById('autoNextSecInput').value, 10) || 30;
+        
+        sysLog(`Auto Next Countdown Started for Heat: ${heatId}`);
+        
+        this.autoNextTimerId = setInterval(() => {
+            this.autoNextRemaining--;
+            let disp = document.getElementById(`countdown_disp_${heatId}`);
+            if(disp) disp.innerText = this.autoNextRemaining;
+            
+            // ⚡ 修正: 定期的な音声アナウンスを追加し、ダッキング（BGM音量低下）を適用
+            if (window.speechSynthesis && !window.speechSynthesis.paused) {
+                let rem = this.autoNextRemaining;
+                let textToSpeak = "";
+                let rate = 1.0;
+                
+                if (rem > 60 && rem % 60 === 0) {
+                    textToSpeak = `次のスタートまで、あと ${rem / 60} 分です。`;
+                } else if (rem === 60) {
+                    textToSpeak = `次のスタートまで、あと 1 分です。`;
+                } else if (rem === 30) {
+                    textToSpeak = `スタートまで、あと 30 秒です。`;
+                } else if (rem === 10) {
+                    const heat = this.heats.find(h => h.id === heatId);
+                    textToSpeak = `まもなく、${heat ? heat.name : ""} がスタートします。`;
+                    rate = 1.1;
+                }
+                
+                if (textToSpeak) {
+                    SoundManager.triggerDucking(); // BGMを下げる
+                    const u = new SpeechSynthesisUtterance(textToSpeak); 
+                    u.lang = 'ja-JP'; 
+                    u.rate = rate;
+                    u.onend = () => { SoundManager.restoreDucking(); }; // 喋り終わったら戻す
+                    u.onerror = () => { SoundManager.restoreDucking(); };
+                    window.speechSynthesis.speak(u);
+                }
+            }
+            // 3秒前ピッ・ピッ・ピッ
+            if(this.autoNextRemaining <= 3 && this.autoNextRemaining > 0) {
+                SoundManager.play('beep');
+            }
+            
+            // 0秒でスタート発火
+            if(this.autoNextRemaining <= 0) {
+                this.cancelCountdown(false); // タイマー停止
+                this.toggleHeatState(heatId); // スタート処理
+            }
+        }, 1000);
+        this.renderBracket(); // カウントダウンUIを表示させるために再描画
+    },
+
+    // ⚡ 追加: インターバルタイマーのキャンセル処理
+    cancelCountdown: function(render = true) {
+        if(this.autoNextTimerId) {
+            clearInterval(this.autoNextTimerId);
+            this.autoNextTimerId = null;
+            this.autoNextHeatId = null;
+            sysLog('Auto Next Countdown Canceled.');
+            if (render) this.renderBracket();
+        }
+    },
+
     loadPilotCSV: async function(e) {
       const file = e.target.files[0]; if (!file) return;
       const reader = new FileReader();
@@ -2995,8 +3112,10 @@
       this.renderBracket();
     },
 
-    finishHeat: async function(heatId) {
-      if(!(await showCustomDialog("このヒートを終了し、結果を確定しますか？", true))) return;
+    finishHeat: async function(heatId, skipConfirm = false) {
+      if(!skipConfirm) {
+          if(!(await showCustomDialog("このヒートを終了し、結果を確定しますか？", true))) return;
+      }
       let heat = this.heats.find(h => h.id === heatId); if (!heat || heat.status === 'COMPLETED') return;
       let standings = this.getRealtimeStandings(heat); const raceLapsTarget = heat.targetLaps || parseInt(document.getElementById('raceLapsInput').value, 10) || 3;
       standings.forEach(s => { if (!s.isPlaceholder && s.laps < raceLapsTarget) { s.isDNF = true; s.timeMs = Infinity; s.timeStr = "DNF"; } });
@@ -3019,26 +3138,36 @@
       // ⚡ 修正: データの同期とコンフリクト判定を行い、必要なら寸止めする
       this.updatePilotsAndBands();
 
-      let nextHeat = this.heats.find(h => h.status === 'WAITING');
-      if (nextHeat) { 
-          let isFullyPopulated = nextHeat.pilots.length > 0 && nextHeat.pilots.every(p => p.name);
-          let bands = nextHeat.pilots.map(p => p.band).filter(b => b);
-          let hasConflict = (new Set(bands)).size !== bands.length;
+      // ⚡ 修正: 次のヒートを自動でACTIVEにする「お節介機能」を削除し、マニュアル進行化
+      this.renderBracket(); 
+      this.autoSave(`Heat Completed: ${heat.name}`);
 
-          if (isFullyPopulated && hasConflict) {
-              sysLog(`Heat ${nextHeat.name} has band conflicts. Auto-activation paused.`);
-              this.renderBracket(); // アクティブ化せずWAITINGのまま表示を更新
-          } else {
-              this.setActive(nextHeat.id); 
-          }
-      } 
-      else {
-          this.renderBracket(); this.autoSave(`Heat Completed: ${heat.name}`);
+      // ⚡ 追加: ヒート終了（確定）から10秒後にTVPのリザルト画面を閉じる指令を送信
+      setTimeout(() => {
+          this.sendTVPCommand('close_result');
+      }, 10000);
+
+      let nextHeat = this.heats.find(h => h.status === 'WAITING');
+      if (!nextHeat) {
           setTimeout(async () => { if (await showCustomDialog("登録された全ヒートが終了しました。\n現在のランキングを予選結果としてスナップショット保存し、本戦に向けてデータをリセットしますか？\n（※エキシビジョンやテスト走行の場合はキャンセルしてください）", true)) document.getElementById('btnSnapshotReset').click(); }, 500);
+      } else {
+          // ⚡ 追加: AUTO FINISH が ON の場合、自動で次のヒートのパイロットをコールする
+          if (this.isAutoFinishEnabled) {
+              // 画面の描画や処理が落ち着くのを少し待ってからコールする
+              setTimeout(() => { this.callHeat(nextHeat.id); }, 1000);
+          }
+
+          // ⚡ 追加: オートネクストがONの場合、次のヒートのカウントダウンを開始
+          if (this.isAutoNextEnabled) {
+              this.startCountdown(nextHeat.id);
+          }
       }
     },
 
     toggleHeatState: async function(heatId) {
+       // ⚡ 追加: 手動スタートが発火したらタイマーを確実にキャンセル
+       if (this.autoNextTimerId) { this.cancelCountdown(false); }
+
        let heat = this.heats.find(h => h.id === heatId); if (!heat) return;
        if (heat.status === 'WAITING') {
            const activeHeat = this.heats.find(h => h.status === 'ACTIVE');
@@ -3051,6 +3180,7 @@
                if (!(await showCustomDialog(`⚠️ 警告：このヒートには周波数の重複（コンフリクト）があります！\n\nこのまま強制的にスタートしますか？`, true))) return;
            }
 
+           this.pendingCommand = 'start'; // ⚡ 追加: TVPへの自動スタート指令をセット
            this.setActive(heatId);
        } else if (heat.status === 'ACTIVE') { this.finishHeat(heatId); }
     },
@@ -3267,12 +3397,21 @@
         const isAnyActive = this.heats.some(h => h.status === 'ACTIVE');
 
         if (heat.status === 'WAITING') {
-           if (!isAnyActive) { actionBtnHtml = `<button class="mecha-btn btn-action" onclick="TournamentManager.toggleHeatState('${heat.id}')" style="border-color:var(--neon-green); color:var(--neon-green);">▶ START HEAT</button>`; } 
-           else { actionBtnHtml = `<span style="font-size:10px; color:#666;">WAITING FOR FINISH...</span>`; }
-           // ⚡ WAITING状態にスキップボタンを追加
-           actionBtnHtml += `<button class="mecha-btn" style="margin-left:8px; font-size:10px;" onclick="TournamentManager.skipHeat('${heat.id}')">⏭ SKIP</button>`;
+           // ⚡ 修正: カウントダウン中かどうかの判定を追加
+           if (TournamentManager.autoNextHeatId === heat.id) {
+               actionBtnHtml = `<span style="color:var(--neon-yellow); font-size:16px; font-weight:bold; margin-right:15px; font-family:'Orbitron';">⏱ <span id="countdown_disp_${heat.id}">${TournamentManager.autoNextRemaining}</span>s</span>`;
+               actionBtnHtml += `<button class="mecha-btn btn-action" onclick="TournamentManager.toggleHeatState('${heat.id}')" style="border-color:var(--neon-green); color:var(--neon-green);">⚡ START NOW</button>`;
+               actionBtnHtml += `<button class="mecha-btn" style="margin-left:8px; border-color:var(--neon-pink); color:var(--neon-pink);" onclick="TournamentManager.cancelCountdown()">⏸ PAUSE</button>`;
+           } else {
+               if (!isAnyActive && !TournamentManager.autoNextHeatId) { actionBtnHtml = `<button class="mecha-btn btn-action" onclick="TournamentManager.toggleHeatState('${heat.id}')" style="border-color:var(--neon-green); color:var(--neon-green);">▶ START HEAT</button>`; } 
+               else { actionBtnHtml = `<span style="font-size:10px; color:#666;">WAITING FOR FINISH...</span>`; }
+               // ⚡ WAITING状態にスキップボタンを追加
+               actionBtnHtml += `<button class="mecha-btn" style="margin-left:8px; font-size:10px;" onclick="TournamentManager.skipHeat('${heat.id}')">⏭ SKIP</button>`;
+           }
         } else if (heat.status === 'ACTIVE') { 
-           actionBtnHtml = `<button class="mecha-btn btn-vj" onclick="TournamentManager.toggleHeatState('${heat.id}')">■ FINISH HEAT</button>`; 
+           // ⚡ 修正: FINISH HEATの前に、TVPを遠隔で止めるためのストップボタンを新設
+           actionBtnHtml = `<button class="mecha-btn" style="border-color:var(--neon-pink); color:var(--neon-pink); margin-right:8px;" onclick="TournamentManager.sendTVPCommand('stop')">🛑 STOP TVP (計測終了)</button>`;
+           actionBtnHtml += `<button class="mecha-btn btn-vj" onclick="TournamentManager.toggleHeatState('${heat.id}')">■ FINISH HEAT</button>`; 
            // ⚡ ACTIVE状態にもスキップボタンを追加
            actionBtnHtml += `<button class="mecha-btn" style="margin-left:8px; font-size:10px;" onclick="TournamentManager.skipHeat('${heat.id}')">⏭ SKIP</button>`;
         } else if (heat.status === 'COMPLETED') {
@@ -3329,6 +3468,14 @@
             }
 
             const payload = { "pilots": pilotsToSync };
+
+            // ⚡ 追加: ペンディングされたコマンドがあれば同封して安全にクリア
+            if (this.pendingCommand) {
+                payload.command = this.pendingCommand;
+                payload.timestamp = Date.now();
+                this.pendingCommand = null;
+            }
+
             const jsonStr = JSON.stringify(payload, null, 2);
 
             // NRDで選択中のフォルダ（dataフォルダ）直下に nrd_sync.json を書き込む
@@ -3502,6 +3649,39 @@
       
       raceLapsInput.addEventListener('change', () => { triggerRecalculation(); });
       dateSelector.addEventListener('change', () => { updateUI(); });
+
+      // ⚡ 追加: オートネクスト & オートフィニッシュのON/OFFトグルイベント
+      const btnAutoNext = document.getElementById('btnToggleAutoNext');
+      if (btnAutoNext) {
+          btnAutoNext.addEventListener('click', (e) => {
+              TournamentManager.isAutoNextEnabled = !TournamentManager.isAutoNextEnabled;
+              if (TournamentManager.isAutoNextEnabled) {
+                  e.target.innerText = 'ON';
+                  e.target.classList.add('active-mode');
+                  e.target.style.color = 'var(--neon-yellow)';
+              } else {
+                  e.target.innerText = 'OFF';
+                  e.target.classList.remove('active-mode');
+                  e.target.style.color = '';
+              }
+          });
+      }
+      
+      const btnAutoFinish = document.getElementById('btnToggleAutoFinish');
+      if (btnAutoFinish) {
+          btnAutoFinish.addEventListener('click', (e) => {
+              TournamentManager.isAutoFinishEnabled = !TournamentManager.isAutoFinishEnabled;
+              if (TournamentManager.isAutoFinishEnabled) {
+                  e.target.innerText = 'ON';
+                  e.target.classList.add('active-mode');
+                  e.target.style.color = 'var(--neon-pink)';
+              } else {
+                  e.target.innerText = 'OFF';
+                  e.target.classList.remove('active-mode');
+                  e.target.style.color = '';
+              }
+          });
+      }
 
       document.getElementById('btnAutoScroll').addEventListener('click', (e) => { 
           autoScrollEnabled = !autoScrollEnabled; 
@@ -4515,6 +4695,44 @@
     if (document.getElementById('btnViewOverall').classList.contains('active-mode')) { TournamentManager.renderOverall(); }
     if(updatedDates.size > 0) TournamentManager.autoSave('System Auto Save');
     
+    // ⚡ 追加: AUTO FINISH がONの場合、TVPの終了を検知して自動確定する
+    if (TournamentManager.isAutoFinishEnabled && !isFirstLoad && !isRecalculating) {
+        const activeHeat = TournamentManager.heats.find(h => h.status === 'ACTIVE');
+        if (activeHeat && activeHeat.activationTime) {
+            const targetLaps = activeHeat.targetLaps || parseInt(document.getElementById('raceLapsInput').value, 10) || 3;
+            let allFinished = true;
+            let fileFoundAfterActivation = false;
+            let hasValidPilot = false;
+
+            const standings = TournamentManager.getRealtimeStandings(activeHeat);
+            for (let s of standings) {
+                if (!s.isPlaceholder) {
+                    hasValidPilot = true;
+                    if (s.laps < targetLaps) allFinished = false; // 全員が目標周回に達したか
+                    
+                    const fName = s.sourceFileName;
+                    if (fName && window.latestRawData[fName] && window.latestRawData[fName]._updatedAt > activeHeat.activationTime) {
+                        fileFoundAfterActivation = true; // TVPがレース後にファイルを書き出したか
+                    }
+                }
+            }
+            
+            // 全員がゴールした、またはタイムアップ等でTVPがファイルを書き出して終了した場合
+            if (hasValidPilot && (allFinished || fileFoundAfterActivation)) {
+                if (!activeHeat._autoFinishTriggered) {
+                    activeHeat._autoFinishTriggered = true; // 重複発火を防止
+                    sysLog(`Auto Finish triggered for Heat: ${activeHeat.id}`);
+                    // ファイル書き込み完了と画面の安定を待つため、数秒ディレイをかけてから確定
+                    setTimeout(() => {
+                        if (activeHeat.status === 'ACTIVE') {
+                            TournamentManager.finishHeat(activeHeat.id, true); // true = 確認ダイアログをスキップ
+                        }
+                    }, 4000);
+                }
+            }
+        }
+    }
+
     isFirstLoad = false; isRecalculating = false;
   }
 
@@ -4726,12 +4944,19 @@
       case 'e':
         const activeForShortcut = TournamentManager.heats.find(h => h.status === 'ACTIVE');
         if (activeForShortcut) { TournamentManager.finishHeat(activeForShortcut.id); } 
-        else { const nextWait = TournamentManager.heats.find(h => h.status === 'WAITING'); if (nextWait) TournamentManager.setActive(nextWait.id); }
+        else { const nextWait = TournamentManager.heats.find(h => h.status === 'WAITING'); if (nextWait) TournamentManager.toggleHeatState(nextWait.id); }
         break;
       case 'b': if (bgmAudio.paused) { document.getElementById('btnBgmPlay')?.click(); } else { document.getElementById('btnBgmOff')?.click(); } break;
       case 'p': document.getElementById('btnPlayCeremony')?.click(); break;
       case 's': document.getElementById('btnAutoScroll')?.click(); break;
       case 'x': document.getElementById('btnManualFx')?.click(); break;
+      
+      // ⚡ 追加: NRD上でスペースキーを押した際、TVPへ強制ストップ指令を送る
+      case ' ': 
+        e.preventDefault(); 
+        TournamentManager.sendTVPCommand('stop'); 
+        break;
+
       case '[':
       case ',':
         e.preventDefault(); userBgmVolume = Math.round(Math.max(0, userBgmVolume - 0.05) * 100) / 100;
