@@ -968,6 +968,92 @@
       <div style="font-size:11px; color:#888; margin-top:5px;" id="currentDirName">未設定</div>
     </div>
 
+    <!-- ⚡ 追加: TVPカメラ設定パネル (環境と解像度のセパレート設計) -->
+    <div class="setting-group" style="background:rgba(255,255,255,0.05); padding:15px; border-left:3px solid var(--neon-pink); margin-bottom:15px;">
+      <h3 style="margin:0 0 10px 0; font-size:14px; color:var(--neon-pink);">📸 Camera Device Config (fpv.xml)</h3>
+      <div style="font-size:11px; color:#aaa; margin-bottom:10px;">TVPのカメラデバイス設定を生成・上書きします。<br><span style="color:var(--neon-yellow);">※この設定を反映させるには、TVP本体の再起動が必要です。</span></div>
+      
+      <!-- 1. ユーザー環境設定ブロック（プリセットで上書きされない） -->
+      <div style="display:flex; gap:10px; margin-bottom:10px; align-items:flex-end;">
+        <div class="setting-group" style="flex:2; margin-bottom:0;">
+          <label>Device Name (キャプチャデバイス選択):</label>
+          <div style="display:flex; gap:5px;">
+            <select id="camDeviceSelect" style="flex:1; border-color:var(--neon-cyan); background:#000; color:var(--neon-cyan);">
+                <option value="USB3 Video">USB3 Video (手動デフォルト)</option>
+            </select>
+            <button id="btnScanDevices" class="mecha-btn" style="border-color:var(--neon-cyan); color:var(--neon-cyan);">🔍 SCAN</button>
+          </div>
+        </div>
+        <div class="setting-group" style="flex:1; margin-bottom:0;">
+          <label>Camera Count (カメラ数):</label>
+          <input type="number" id="camNumInput" value="4" min="1" max="8" style="width:100%;">
+        </div>
+        <div class="setting-group" style="flex:1; margin-bottom:0;">
+          <label>4Cam Layout (4画面配置):</label>
+          <select id="camLayoutSelect" style="width:100%; border-color:#333;">
+             <option value="0">0: 田の字型 (2x2)</option>
+             <option value="1">1: 横一列型 (4x1)</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- 2. フォーマットプリセットブロック -->
+      <div style="margin-bottom:10px; border-top:1px dashed #444; padding-top:10px;">
+        <label style="color:var(--neon-yellow);">Format Preset (受信機フォーマット選択):</label>
+        <select id="camPresetSelect" style="width:100%; border-color:var(--neon-yellow); background:#000; color:var(--neon-yellow);">
+            <option value="">-- 手動設定 (カスタム) --</option>
+            <option value="dji720">DJI 720p (1280x720 / 16:9)</option>
+            <option value="dji1080">DJI 1080p (1920x1080 / 16:9)</option>
+            <option value="hawkeye720">HAWKEYE 720p (1280x720 / 16:9)</option>
+            <option value="hawkeye1080">HAWKEYE 1080p (1920x1080 / 16:9)</option>
+            <option value="hdzero720">HDZero 720p (1280x720 / 4:3 Crop)</option>
+            <option value="hdzero1080">HDZero 1080p (1920x1080 / 16:9)</option>
+            <option value="analog">ROTG FUAV SKYDROID (640x480 / 4:3)</option>
+        </select>
+        <div style="font-size:9px; color:#aaa; margin-top:4px;">※プリセットを選択すると、下の解像度・クロップ設定のみが自動で書き換わります。</div>
+      </div>
+
+      <!-- 3. 解像度・クロップ設定ブロック（プリセットで上書きされる） -->
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <div class="setting-group" style="flex:1; margin-bottom:0;">
+          <label>Grab Width (横):</label>
+          <input type="number" id="camGrabWInput" value="1280" style="width:100%;">
+        </div>
+        <div class="setting-group" style="flex:1; margin-bottom:0;">
+          <label>Grab Height (縦):</label>
+          <input type="number" id="camGrabHInput" value="720" style="width:100%;">
+        </div>
+        <div class="setting-group" style="flex:1; margin-bottom:0;">
+          <label>Aspect Ratio:</label>
+          <select id="camAspectSelect" style="width:100%; border-color:#333;">
+             <option value="4:3">4:3</option>
+             <option value="16:9" selected>16:9</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:10px;">
+        <div class="setting-group" style="flex:1; margin-bottom:0;">
+          <label>Crop X (始点 横):</label>
+          <input type="number" id="camCropXInput" value="0" style="width:100%;">
+        </div>
+        <div class="setting-group" style="flex:1; margin-bottom:0;">
+          <label>Crop Y (始点 縦):</label>
+          <input type="number" id="camCropYInput" value="0" style="width:100%;">
+        </div>
+        <div class="setting-group" style="flex:1; margin-bottom:0;">
+          <label>Crop W (クロップ幅):</label>
+          <input type="number" id="camCropWInput" value="1280" style="width:100%;">
+        </div>
+        <div class="setting-group" style="flex:1; margin-bottom:0;">
+          <label>Crop H (クロップ高):</label>
+          <input type="number" id="camCropHInput" value="720" style="width:100%;">
+        </div>
+      </div>
+
+      <button id="btnSaveFpvXml" class="mecha-btn btn-action" style="width:100%; padding:10px; border-color:var(--neon-pink); color:var(--neon-pink); font-weight:bold;">[ 💾 OVERWRITE fpv.xml ]</button>
+    </div>
+
     <div class="setting-group" style="background:rgba(255,255,255,0.05); padding:15px; border-left:3px solid var(--neon-yellow); margin-bottom:15px;">
       <h3 style="margin:0 0 10px 0; font-size:14px; color:var(--neon-yellow);">📡 FPV Frequency Bands (初期周波数設定)</h3>
       <input type="text" id="activeBandsInput" class="nrd-input" style="width:100%; font-size:14px; padding:6px; background:#000; color:#fff; border:1px solid #555; font-family:'Share Tech Mono';" value="E2, E1, F3, F5">
@@ -3930,6 +4016,149 @@
       });
 
       ['startup', 'new', 'up', 'record', 'fanfare', 'announce', 'lottery'].forEach(type => { document.getElementById(`soundInput_${type}`)?.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = async (ev) => { await SoundManager.saveSound(type, ev.target.result); SoundManager.testPlay(type); }; reader.readAsDataURL(file); } }); });
+
+      // ⚡ 追加: デバイススキャン（Device Manager）機能
+      document.getElementById('btnScanDevices')?.addEventListener('click', async () => {
+          try {
+              // ブラウザにカメラの取得権限を要求
+              await navigator.mediaDevices.getUserMedia({ video: true });
+              const devices = await navigator.mediaDevices.enumerateDevices();
+              const videoDevices = devices.filter(d => d.kind === 'videoinput');
+              
+              const select = document.getElementById('camDeviceSelect');
+              const currentVal = select.value; // 現在の選択を記憶
+              select.innerHTML = '';
+              
+              if (videoDevices.length === 0) {
+                  select.innerHTML = '<option value="USB3 Video">No Devices Found</option>';
+                  await showCustomDialog("カメラデバイスが見つかりませんでした。", false);
+                  return;
+              }
+
+              let foundCurrent = false;
+              videoDevices.forEach(d => {
+                  const option = document.createElement('option');
+                  // 不要なハードウェアIDを取り除き、クリーンな名称にする
+                  let cleanLabel = d.label.replace(/\s*\([0-9a-fA-F]{4}:[0-9a-fA-F]{4}\)\s*$/, '') || 'Unknown Device';
+                  option.value = cleanLabel;
+                  option.text = cleanLabel;
+                  select.appendChild(option);
+                  if (cleanLabel === currentVal) foundCurrent = true;
+              });
+
+              // 元々手動で保存されていた名前があれば、リストになくても追加して選択を維持
+              if (!foundCurrent && currentVal) {
+                  const option = document.createElement('option');
+                  option.value = currentVal;
+                  option.text = `${currentVal} (未接続)`;
+                  select.appendChild(option);
+                  select.value = currentVal;
+              }
+
+              sysLog(`Device Scan Complete. Found ${videoDevices.length} video inputs.`);
+          } catch(e) {
+              sysLog(`Camera permission denied: ${e.message}`, 'warn');
+              await showCustomDialog("カメラへのアクセスが拒否されたため、デバイス名を取得できませんでした。\nブラウザの権限設定を確認してください。", false);
+          }
+      });
+
+      // ⚡ 追加: 解像度フォーマットのプリセット適用機能
+      document.getElementById('camPresetSelect')?.addEventListener('change', (e) => {
+          const val = e.target.value;
+          if (!val) return; // カスタムの場合は何もしない
+
+          const presets = {
+              'dji720': { gw: 1280, gh: 720, cx: 0, cy: 0, cw: 1280, ch: 720, aspect: '16:9' },
+              'dji1080': { gw: 1920, gh: 1080, cx: 0, cy: 0, cw: 1920, ch: 1080, aspect: '16:9' },
+              'hawkeye720': { gw: 1280, gh: 720, cx: 0, cy: 0, cw: 1280, ch: 720, aspect: '16:9' },
+              'hawkeye1080': { gw: 1920, gh: 1080, cx: 0, cy: 0, cw: 1920, ch: 1080, aspect: '16:9' },
+              'hdzero720': { gw: 1280, gh: 720, cx: 160, cy: 0, cw: 960, ch: 720, aspect: '4:3' }, // HDZero 4:3 クロップ
+              'hdzero1080': { gw: 1920, gh: 1080, cx: 0, cy: 0, cw: 1920, ch: 1080, aspect: '16:9' },
+              'analog': { gw: 640, gh: 480, cx: 0, cy: 0, cw: 640, ch: 480, aspect: '4:3' }
+          };
+
+          const p = presets[val];
+          if (p) {
+              document.getElementById('camGrabWInput').value = p.gw;
+              document.getElementById('camGrabHInput').value = p.gh;
+              document.getElementById('camCropXInput').value = p.cx;
+              document.getElementById('camCropYInput').value = p.cy;
+              document.getElementById('camCropWInput').value = p.cw;
+              document.getElementById('camCropHInput').value = p.ch;
+              document.getElementById('camAspectSelect').value = p.aspect;
+              sysLog(`Preset Applied: ${val}`);
+          }
+      });
+
+      // ⚡ 追加: 結合して fpv.xml を書き出す機能
+      document.getElementById('btnSaveFpvXml')?.addEventListener('click', async () => {
+          if (!directoryHandle) {
+              await showCustomDialog("データフォルダが選択されていません。先にメイン画面でフォルダ（TVPのdataフォルダ）を選択してください。", false);
+              return;
+          }
+
+          if (!(await showCustomDialog("TVPのカメラ設定（fpv.xml）を上書きしますか？\n実行後、TVPを再起動して設定を反映させてください。", true))) return;
+
+          const name = document.getElementById('camDeviceSelect').value;
+          const num = document.getElementById('camNumInput').value;
+          const gw = document.getElementById('camGrabWInput').value;
+          const gh = document.getElementById('camGrabHInput').value;
+          const cx = document.getElementById('camCropXInput').value;
+          const cy = document.getElementById('camCropYInput').value;
+          const cw = document.getElementById('camCropWInput').value;
+          const ch = document.getElementById('camCropHInput').value;
+          const aspect = document.getElementById('camAspectSelect').value;
+          const layout = document.getElementById('camLayoutSelect').value;
+
+          const xmlContent = `<?xml version="1.0" encoding="utf-8"?>\n<camera>\n    <name>${name}</name>\n    <camnum>${num}</camnum>\n    <description>${aspect}</description>\n    <grab>\n        <width>${gw}</width>\n        <height>${gh}</height>\n    </grab>\n    <crop>\n        <x>${cx}</x>\n        <y>${cy}</y>\n        <width>${cw}</width>\n        <height>${ch}</height>\n    </crop>\n    <draw>\n        <aspectRatio>${aspect}</aspectRatio>\n    </draw>\n    <fourCamHorizontal>${layout}</fourCamHorizontal>\n</camera>`;
+
+          try {
+              // directoryHandle (通常はdataフォルダ) 内の camera フォルダを取得または作成
+              const cameraDir = await directoryHandle.getDirectoryHandle('camera', { create: true });
+              const fileHandle = await cameraDir.getFileHandle('fpv.xml', { create: true });
+              const writable = await fileHandle.createWritable();
+              await writable.write(xmlContent);
+              await writable.close();
+
+              // ローカルDBにも保存して次回表示時に復元
+              const fpvSettings = { name, num, gw, gh, cx, cy, cw, ch, aspect, layout };
+              await saveSetting('fpv_config', fpvSettings);
+
+              sysLog('fpv.xml updated successfully.', 'info');
+              await showCustomDialog("fpv.xml の書き出しに成功しました！\nTVPを再起動して設定を反映させてください。", false);
+          } catch (e) {
+              sysLog(`fpv.xml write error: ${e.message}`, 'error');
+              await showCustomDialog(`fpv.xml の保存に失敗しました。\nエラー: ${e.message}`, false);
+          }
+      });
+      
+      // 起動時に保存された設定があればフォームに復元
+      loadSetting('fpv_config').then(cfg => {
+          if (cfg) {
+              const select = document.getElementById('camDeviceSelect');
+              if (select) {
+                  // リストになければ追加してセットする
+                  let exists = false;
+                  for(let i=0; i<select.options.length; i++) { if(select.options[i].value === cfg.name) exists = true; }
+                  if (!exists) {
+                      const option = document.createElement('option');
+                      option.value = cfg.name;
+                      option.text = cfg.name;
+                      select.appendChild(option);
+                  }
+                  select.value = cfg.name;
+              }
+              if (document.getElementById('camNumInput')) document.getElementById('camNumInput').value = cfg.num;
+              if (document.getElementById('camGrabWInput')) document.getElementById('camGrabWInput').value = cfg.gw;
+              if (document.getElementById('camGrabHInput')) document.getElementById('camGrabHInput').value = cfg.gh;
+              if (document.getElementById('camCropXInput')) document.getElementById('camCropXInput').value = cfg.cx;
+              if (document.getElementById('camCropYInput')) document.getElementById('camCropYInput').value = cfg.cy;
+              if (document.getElementById('camCropWInput')) document.getElementById('camCropWInput').value = cfg.cw;
+              if (document.getElementById('camCropHInput')) document.getElementById('camCropHInput').value = cfg.ch;
+              if (document.getElementById('camAspectSelect')) document.getElementById('camAspectSelect').value = cfg.aspect;
+              if (document.getElementById('camLayoutSelect')) document.getElementById('camLayoutSelect').value = cfg.layout;
+          }
+      });
 
       sysLog('Event Listeners Bound Successfully.', 'info');
       
