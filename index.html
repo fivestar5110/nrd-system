@@ -4020,9 +4020,13 @@
       // ⚡ 追加: デバイススキャン（Device Manager）機能
       document.getElementById('btnScanDevices')?.addEventListener('click', async () => {
           try {
-              // ブラウザにカメラの取得権限を要求
-              await navigator.mediaDevices.getUserMedia({ video: true });
+              // ブラウザにカメラの取得権限を要求し、ストリームを取得
+              const stream = await navigator.mediaDevices.getUserMedia({ video: true });
               const devices = await navigator.mediaDevices.enumerateDevices();
+              
+              // 取得後、すぐにストリームを閉じる（裏でカメラが点きっぱなしになるのを防ぐ）
+              stream.getTracks().forEach(track => track.stop());
+
               const videoDevices = devices.filter(d => d.kind === 'videoinput');
               
               const select = document.getElementById('camDeviceSelect');
@@ -4038,12 +4042,20 @@
               let foundCurrent = false;
               videoDevices.forEach(d => {
                   const option = document.createElement('option');
-                  // 不要なハードウェアIDを取り除き、クリーンな名称にする
-                  let cleanLabel = d.label.replace(/\s*\([0-9a-fA-F]{4}:[0-9a-fA-F]{4}\)\s*$/, '') || 'Unknown Device';
-                  option.value = cleanLabel;
-                  option.text = cleanLabel;
+                  // ブラウザが名前を返さなかった場合のフォールバック
+                  let rawLabel = d.label || `Unknown Device (${d.deviceId.slice(0, 5)}...)`;
+                  
+                  // TVP側で部分一致検索させるため、OSが付与する不要な情報 (xxx:xxx) を安全に除去
+                  let cleanLabel = rawLabel;
+                  if (cleanLabel.includes('(')) {
+                      cleanLabel = cleanLabel.substring(0, cleanLabel.lastIndexOf('(')).trim();
+                  }
+                  if (!cleanLabel) cleanLabel = rawLabel;
+
+                  option.value = cleanLabel;       // fpv.xml に書き込む名前（部分一致用）
+                  option.text = rawLabel;          // UIのプルダウンに表示する名前（実際のデバイス名）
                   select.appendChild(option);
-                  if (cleanLabel === currentVal) foundCurrent = true;
+                  if (cleanLabel === currentVal || rawLabel === currentVal) foundCurrent = true;
               });
 
               // 元々手動で保存されていた名前があれば、リストになくても追加して選択を維持
