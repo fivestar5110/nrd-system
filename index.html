@@ -3133,14 +3133,37 @@
 
       for (let i = 0; i < heat.pilots.length; i++) {
         let p = heat.pilots[i];
-        if (!p.name) {
-          standings.push({ displayName: p.sourceDesc, isPlaceholder: true, laps: 0, timeMs: Infinity, timeStr: "-:-.-", isDNF: false, isDSQ: false, originalData: p, originalIndex: i, sourceFileName: "" });
-          continue;
+        
+        // ⚡ 修正: 空枠判定を強化。EMPTYやNo Pilotは基本的にプレースホルダーとして扱う
+        let rawName = p.name ? p.name.trim() : "";
+        let isPlaceholder = (rawName === "" || rawName.toUpperCase() === "EMPTY" || rawName === "No Pilot" || rawName === "No_Pilot");
+        let searchName = isPlaceholder ? "No_Pilot" : rawName;
+        let displayName = isPlaceholder ? "EMPTY" : rawName;
+
+        let activeFileName = TournamentManager.findLatestSourceFile(searchName);
+        let finalLapsData = []; // ⚡ 追加: グラフ描画用のラップデータを保持する配列
+        
+        // ⚡ 例外処理: 空枠だがTVP側でラップを刻んでいる場合（誤検知や設定漏れ）は有効なパイロットとして扱う
+        let hasLaps = false;
+        if (activeFileName && window.latestRawData[activeFileName] && window.latestRawData[activeFileName][searchName]) {
+            const rawTotals = window.latestRawData[activeFileName][searchName].rawTotalsMs;
+            const computedLapsCheck = getComputedLaps(activeFileName, searchName, rawTotals);
+            if (computedLapsCheck.length > 0) {
+                hasLaps = true;
+            }
         }
 
-        let name = p.name; let currentLaps = 0; let timeMs = Infinity; let timeStr = "-:-.-"; let isDNF = false; let isDSQ = false;
-        let activeFileName = TournamentManager.findLatestSourceFile(name);
-        let finalLapsData = []; // ⚡ 追加: グラフ描画用のラップデータを保持する配列
+        if (isPlaceholder && !hasLaps) {
+            standings.push({ displayName: "EMPTY", searchName: "EMPTY", isPlaceholder: true, laps: 0, timeMs: Infinity, timeStr: "-:-.-", isDNF: false, isDSQ: false, originalData: p, originalIndex: i, sourceFileName: "", lapsData: [] });
+            continue;
+        }
+
+        // 実在パイロット、またはラップを刻んでしまったプレースホルダーの処理
+        isPlaceholder = false;
+        if (displayName === "EMPTY" && hasLaps) displayName = "No Pilot"; // ラップがある場合は画面にNo Pilotと出す
+
+        let name = searchName;
+        let currentLaps = 0; let timeMs = Infinity; let timeStr = "-:-.-"; let isDNF = false; let isDSQ = false;
 
         // ⚡ 最優先でDSQ（失格）を判定
         if (activeFileName && dsqRecords.has(`${activeFileName}_${name}`)) {
@@ -3168,7 +3191,7 @@
         }
 
         // ⚡ 修正: lapsData も一緒にプッシュ（保存）する。これにより確定時に完全にロックされる
-        standings.push({ displayName: name, isPlaceholder: false, laps: currentLaps, timeMs: timeMs, timeStr: timeStr, isDNF: isDNF, isDSQ: isDSQ, originalData: p, originalIndex: i, sourceFileName: activeFileName, lapsData: finalLapsData });
+        standings.push({ displayName: displayName, searchName: searchName, isPlaceholder: false, laps: currentLaps, timeMs: timeMs, timeStr: timeStr, isDNF: isDNF, isDSQ: isDSQ, originalData: p, originalIndex: i, sourceFileName: activeFileName, lapsData: finalLapsData });
       }
 
       // ⚡ ステータスに応じたソートルールの適用
@@ -3189,6 +3212,41 @@
           standings.sort((a, b) => a.originalIndex - b.originalIndex);
       }
       return standings;
+    },
+
+    // ⚡ 追加: 毎秒実行され、TVPからリザルトが書き出されたかを判定して自動確定する
+    checkAutoFinish: function() {
+        if (!this.isAutoFinishEnabled || isFirstLoad || isRecalculating) return;
+        const activeHeat = this.heats.find(h => h.status === 'ACTIVE');
+        if (!activeHeat || !activeHeat.activationTime) return;
+
+        let fileFoundAfterActivation = false;
+        let hasValidPilot = false;
+
+        const standings = this.getRealtimeStandings(activeHeat);
+        for (let s of standings) {
+            if (!s.isPlaceholder) {
+                hasValidPilot = true;
+                const fName = s.sourceFileName;
+                // ⚡ ヒートがACTIVEになった時刻以降に、TVPが新しいリザルトファイルを書き出したか
+                if (fName && window.latestRawData[fName] && window.latestRawData[fName]._updatedAt > activeHeat.activationTime) {
+                    fileFoundAfterActivation = true;
+                }
+            }
+        }
+
+        // ⚡ TVPからファイルが出力されたことを検知したら、4秒後に自動でフィニッシュする
+        if (hasValidPilot && fileFoundAfterActivation) {
+            if (!activeHeat._autoFinishTriggered) {
+                activeHeat._autoFinishTriggered = true; // 重複発火を防止
+                sysLog(`Auto Finish triggered for Heat: ${activeHeat.id}`);
+                setTimeout(() => {
+                    if (activeHeat.status === 'ACTIVE') {
+                        this.finishHeat(activeHeat.id, true); // true = 確認ダイアログをスキップ
+                    }
+                }, 4000);
+            }
+        }
     },
 
     setActive: function(heatId) {
@@ -3344,12 +3402,20 @@
     callHeat: function(heatId) {
       let heat = this.heats.find(h => h.id === heatId); if(!heat) return;
       let standings = this.getRealtimeStandings(heat);
-      let names = standings.map(s => { let alias = pilotAliases[s.displayName]; return alias ? `${alias}、${s.displayName}` : s.displayName; }).join('。 ');
+      
+      // ⚡ 修正: EMPTY枠（プレースホルダー）を読み上げ対象から除外する
+      let validStandings = standings.filter(s => !s.isPlaceholder && s.displayName !== "EMPTY" && s.displayName !== "No Pilot");
+      if (validStandings.length === 0) return; // 全員が空枠の場合はコールしない
+      
+      let names = validStandings.map(s => { let alias = pilotAliases[s.displayName]; return alias ? `${alias}、${s.displayName}` : s.displayName; }).join('。 ');
       SoundManager.triggerDucking(); window.speechSynthesis.cancel();
       setTimeout(() => {
         if (window.speechSynthesis.paused) window.speechSynthesis.resume();
         if (window._speechUtterance) { window._speechUtterance.onerror = null; window._speechUtterance.onend = null; }
-        const u = new SpeechSynthesisUtterance(`次は、${heat.name}。 ${names}。 準備をお願いします。`); u.lang = 'ja-JP'; u.rate = 1.0;
+        
+        // ⚡ 修正: TTSエンジンが正しく自然なイントネーションで発音できるよう文言と読点を調整
+        const u = new SpeechSynthesisUtterance(`Next Raceは、${heat.name}。 ${names}。 準備をお願いします。`); u.lang = 'ja-JP'; u.rate = 1.0;
+        
         u.onend = () => { SoundManager.restoreDucking(); }; u.onerror = (err) => { if (err.error !== 'canceled') sysLog(`Speech Synthesis Error: ${err.error}`, 'warn'); SoundManager.restoreDucking(); };
         window._speechUtterance = u; window.speechSynthesis.speak(u);
       }, 250);
@@ -3391,6 +3457,14 @@
               break;
           }
       }
+
+      // ⚡ 追加: EMPTY枠用の飛び入り参加パイロットリスト（プルダウン用）を生成
+      let directPilotOptionsArr = [];
+      registeredPilots.forEach(rp => { directPilotOptionsArr.push(`<option value="${rp}">[名簿] ${rp}</option>`); });
+      Object.keys(iconCache).filter(n => n.toLowerCase() !== 'sample pilot').sort().forEach(ip => { 
+          if (!registeredPilots.includes(ip)) { directPilotOptionsArr.push(`<option value="${ip}">[アイコン] ${ip}</option>`); } 
+      });
+      const globalPilotOptionsHtml = `<option value="">-- EMPTY --</option>` + directPilotOptionsArr.join('');
 
       container.innerHTML = '';
       this.heats.forEach((heat, hIdx) => {
@@ -3435,10 +3509,14 @@
               bandSelectHtml = `<select id="band_h${hIdx}_p${s.originalIndex}" class="band-select ${initialColorClass}" onchange="TournamentManager.onBandChange(${hIdx}, ${s.originalIndex}, this.value)">${optionsHtml}</select>`;
           }
 
-          // ⚡ 名前を固定幅ではなく、最大幅指定(max-width)にして省略(...)させる安全設計
-          let nameSpan = s.isPlaceholder ? 
-            `<span class="hc-placeholder hc-pilot-name" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block;" contenteditable="true" onblur="TournamentManager.updatePilot('${heat.id}', ${s.originalIndex}, this.innerText)">${s.displayName}</span>` : 
-            `<span class="${rankClass} hc-pilot-name ${fxClass}" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block;" contenteditable="true" onblur="TournamentManager.updatePilot('${heat.id}', ${s.originalIndex}, this.innerText)">${s.displayName}</span>`;
+          // ⚡ 修正: プレースホルダー（EMPTY）の場合は飛び入り参加用のプルダウンにする
+          let nameSpan = "";
+          if (s.isPlaceholder) {
+              // ネイティブの矢印を消し(appearance:none)、幅と背景色を調整して以前のような見やすいラベル風デザインにする
+              nameSpan = `<select class="nrd-input hc-pilot-name" style="width:130px; font-family:'Orbitron'; font-weight:bold; color:#888; background:rgba(255,255,255,0.05); border:1px dashed #666; padding:4px 6px; outline:none; border-radius:2px; cursor:pointer; text-align:center; appearance:none; -webkit-appearance:none;" onchange="TournamentManager.updatePilot('${heat.id}', ${s.originalIndex}, this.value)">${globalPilotOptionsHtml}</select>`;
+          } else {
+              nameSpan = `<span class="${rankClass} hc-pilot-name ${fxClass}" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block;" contenteditable="true" onblur="TournamentManager.updatePilot('${heat.id}', ${s.originalIndex}, this.innerText)">${s.displayName}</span>`;
+          }
           
           let timeDisplay = s.isDNF ? `<span style="color:var(--neon-pink);">DNF</span>` : s.timeStr;
           
@@ -3546,11 +3624,20 @@
             let targetHeat = this.heats.find(h => h.status === 'ACTIVE') || this.heats.find(h => h.status === 'WAITING');
 
             if (targetHeat) {
-                // ヒートのパイロット情報を抽出（空枠なら空文字）
-                pilotsToSync = targetHeat.pilots.map(p => ({ "name": p.name || "" }));
+                // ⚡ 修正: 空枠・EMPTYの場合はTVP側に "No Pilot" として送信し、必ず4枠分送る
+                pilotsToSync = targetHeat.pilots.map(p => {
+                    let pName = p.name ? p.name.trim() : "";
+                    if (pName === "" || pName.toUpperCase() === "EMPTY" || pName === "No Pilot" || pName === "No_Pilot") {
+                        return { "name": "No Pilot" };
+                    }
+                    return { "name": pName };
+                });
+                while (pilotsToSync.length < 4) {
+                    pilotsToSync.push({ "name": "No Pilot" });
+                }
             } else {
-                // 対象が無ければ全員空にする
-                pilotsToSync = [{ "name": "" }, { "name": "" }, { "name": "" }, { "name": "" }];
+                // 対象が無ければ全員 No Pilot にする
+                pilotsToSync = [{ "name": "No Pilot" }, { "name": "No Pilot" }, { "name": "No Pilot" }, { "name": "No Pilot" }];
             }
 
             const payload = { "pilots": pilotsToSync };
@@ -4241,6 +4328,11 @@
     const d = String(now.getDate()).padStart(2, '0'); const h = String(now.getHours()).padStart(2, '0');
     const min = String(now.getMinutes()).padStart(2, '0'); const s = String(now.getSeconds()).padStart(2, '0');
     document.getElementById('realtimeClock').innerText = `${y}-${m}-${d} ${h}:${min}:${s}`;
+    
+    // ⚡ 修正: 毎秒確実にオートフィニッシュの条件を満たしていないかチェックする
+    if (typeof TournamentManager !== 'undefined' && TournamentManager.checkAutoFinish) {
+        TournamentManager.checkAutoFinish();
+    }
   }
   setInterval(updateClock, 1000); updateClock();
 
@@ -4936,12 +5028,10 @@
     if (document.getElementById('btnViewOverall').classList.contains('active-mode')) { TournamentManager.renderOverall(); }
     if(updatedDates.size > 0) TournamentManager.autoSave('System Auto Save');
     
-    // ⚡ 追加: AUTO FINISH がONの場合、TVPの終了を検知して自動確定する
+    // ⚡ 修正: AUTO FINISH がONの場合、TVPの終了(ファイル出力)を検知して自動確定する
     if (TournamentManager.isAutoFinishEnabled && !isFirstLoad && !isRecalculating) {
         const activeHeat = TournamentManager.heats.find(h => h.status === 'ACTIVE');
         if (activeHeat && activeHeat.activationTime) {
-            const targetLaps = activeHeat.targetLaps || parseInt(document.getElementById('raceLapsInput').value, 10) || 3;
-            let allFinished = true;
             let fileFoundAfterActivation = false;
             let hasValidPilot = false;
 
@@ -4949,21 +5039,20 @@
             for (let s of standings) {
                 if (!s.isPlaceholder) {
                     hasValidPilot = true;
-                    if (s.laps < targetLaps) allFinished = false; // 全員が目標周回に達したか
-                    
                     const fName = s.sourceFileName;
+                    // ⚡ TVPがヒートアクティブ後に新しいリザルトファイルを書き出したかをチェック
                     if (fName && window.latestRawData[fName] && window.latestRawData[fName]._updatedAt > activeHeat.activationTime) {
-                        fileFoundAfterActivation = true; // TVPがレース後にファイルを書き出したか
+                        fileFoundAfterActivation = true;
                     }
                 }
             }
             
-            // 全員がゴールした、またはタイムアップ等でTVPがファイルを書き出して終了した場合
-            if (hasValidPilot && (allFinished || fileFoundAfterActivation)) {
+            // ⚡ アクティブ後にTVPからファイルが書き出された（NRDが読み込んだ）場合
+            if (hasValidPilot && fileFoundAfterActivation) {
                 if (!activeHeat._autoFinishTriggered) {
                     activeHeat._autoFinishTriggered = true; // 重複発火を防止
                     sysLog(`Auto Finish triggered for Heat: ${activeHeat.id}`);
-                    // ファイル書き込み完了と画面の安定を待つため、数秒ディレイをかけてから確定
+                    // ⚡ 4秒後（4000ms）に自動確定（FINISH HEAT）を確実に実行する
                     setTimeout(() => {
                         if (activeHeat.status === 'ACTIVE') {
                             TournamentManager.finishHeat(activeHeat.id, true); // true = 確認ダイアログをスキップ
