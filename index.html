@@ -581,6 +581,10 @@
               <label style="color:var(--neon-pink);">AUTO FINISH:</label>
               <button id="btnToggleAutoFinish" class="mecha-btn">OFF</button>
             </div>
+            <div class="mecha-panel" style="border-color:var(--neon-green);">
+              <label style="color:var(--neon-green);">FULL AUTO:</label>
+              <button id="btnToggleFullAuto" class="mecha-btn">OFF</button>
+            </div>
             <div class="db-search-wrapper">
               <span class="db-search-icon">🔍</span>
               <input type="text" id="pilotSearchInput" class="db-search-input" placeholder="PILOT DB..." autocomplete="off">
@@ -699,6 +703,11 @@
               <div class="setting-group" style="flex:1;">
                 <label style="font-size:10px; color:var(--neon-orange);">TARGET LAPS (規定周回):</label>
                 <input type="number" id="dirTargetLaps" value="3" min="1" style="width:100%; border-color:var(--neon-orange); color:var(--neon-orange);">
+              </div>
+              <!-- ⚡ 追加: TVPへ流すための制限時間（秒）の入力欄 -->
+              <div class="setting-group" style="flex:1;">
+                <label style="font-size:10px; color:var(--neon-orange);">TIME LIMIT (制限秒数):</label>
+                <input type="number" id="dirTargetSecs" value="180" min="0" style="width:100%; border-color:var(--neon-orange); color:var(--neon-orange);">
               </div>
             </div>
             
@@ -1078,6 +1087,8 @@
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px; margin-top:15px; border-top:1px dashed #333; padding-top:10px;"><span style="width:120px; font-size:10px; color:var(--neon-yellow);">FANFARE</span><input type="file" id="soundInput_fanfare" accept="audio/*" style="flex:1; font-size:10px;"><button class="mecha-btn btn-test" onclick="SoundManager.testPlay('fanfare')">TEST</button><button class="mecha-btn btn-action" style="color:var(--neon-pink); border-bottom-color:var(--neon-pink);" onclick="SoundManager.clearSound('fanfare')">CLR</button></div>
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;"><span style="width:120px; font-size:10px; color:var(--neon-pink); font-weight:bold;">LOTTERY (抽選)</span><input type="file" id="soundInput_lottery" accept="audio/*" style="flex:1; font-size:10px;"><button class="mecha-btn btn-test" onclick="SoundManager.testPlay('lottery')">TEST</button><button class="mecha-btn btn-action" style="color:var(--neon-pink); border-bottom-color:var(--neon-pink);" onclick="SoundManager.clearSound('lottery')">CLR</button></div>
       <div style="display:flex; align-items:center; gap:10px;"><span style="width:120px; font-size:10px; color:var(--neon-yellow);">ANNOUNCE</span><input type="file" id="soundInput_announce" accept="audio/*" style="flex:1; font-size:10px;"><button class="mecha-btn btn-test" onclick="SoundManager.testPlay('announce')">TEST</button><button class="mecha-btn btn-action" style="color:var(--neon-pink); border-bottom-color:var(--neon-pink);" onclick="SoundManager.clearSound('announce')">CLR</button></div>
+     <!-- ⚡ 追加: ステージ切替用インターバル音声のアップロードスロット -->
+     <div style="display:flex; align-items:center; gap:10px; margin-top:5px;"><span style="width:120px; font-size:10px; color:var(--neon-orange); font-weight:bold;">INTERVAL (R-CHANGE)</span><input type="file" id="soundInput_interval" accept="audio/*" style="flex:1; font-size:10px;"><button class="mecha-btn btn-test" onclick="SoundManager.testPlay('interval')">TEST</button><button class="mecha-btn btn-action" style="color:var(--neon-pink); border-bottom-color:var(--neon-pink);" onclick="SoundManager.clearSound('interval')">CLR</button></div>
     </div>
   </div>
 </div>
@@ -1848,6 +1859,7 @@
     // ⚡ 追加: オートタイマー管理用変数
     isAutoNextEnabled: false,
     isAutoFinishEnabled: false, // ⚡ 追加: 自動確定フラグ
+    isFullAutoEnabled: false,   // ⚡ 追加: フルオートモードフラグ
     autoNextTimerId: null,
     autoNextHeatId: null,
     autoNextRemaining: 0,
@@ -1858,7 +1870,11 @@
     // ⚡ 追加: バンドに基づく自動ソート処理（コンフリクトがない場合のみ発動）
     checkAndSortHeatPilots: function(heat) {
         if (heat.status === 'COMPLETED') return false;
-        let isFullyPopulated = heat.pilots.length > 0 && heat.pilots.every(p => p.name);
+        // ⚡ 修正: EMPTY枠（プレースホルダー）を含む場合は完全ではないため、自動ソートをストップする
+        let isFullyPopulated = heat.pilots.length > 0 && heat.pilots.every(p => {
+            let n = p.name ? p.name.trim().toUpperCase() : "";
+            return n && n !== "EMPTY" && n !== "NO PILOT" && n !== "NO_PILOT";
+        });
         if (!isFullyPopulated) return false;
 
         let bands = heat.pilots.map(p => p.band).filter(b => b);
@@ -1895,11 +1911,15 @@
                             if (p.name !== upPilot.displayName) { p.name = upPilot.displayName; p.justUpdated = true; }
                         } else { p.name = ""; }
                     }
-                    // ⚡ 修正: srcHeat が未完了の場合は p.name="" で強制リセットせず、現在の状態を保護する
                 }
             });
             heat.pilots.forEach((p, pIdx) => {
-                if (p.name && !p.band) {
+                // ⚡ 修正: EMPTY枠の裏側に残っている不要なバンド情報（ゾンビ周波数）を強制的にクリアする
+                let n = p.name ? p.name.trim().toUpperCase() : "";
+                let isPlaceholder = (n === "" || n === "EMPTY" || n === "NO PILOT" || n === "NO_PILOT");
+                if (isPlaceholder) {
+                    p.band = ""; 
+                } else if (!p.band) {
                     p.band = this.getLastUsedBand(p.name, hIdx) || this.availableBands[pIdx % this.availableBands.length];
                 }
             });
@@ -1918,16 +1938,20 @@
     refreshHeatBandUI: function(heatIdx) {
       const heat = this.heats[heatIdx];
       if (!heat || !heat.pilots) return;
-      const currentBands = heat.pilots.map(p => p.band).filter(b => b);
+      
+      // ⚡ 修正: プレースホルダー（EMPTY）が持っているバンドはコンフリクト集計から除外する
+      const currentBands = heat.pilots.map(p => {
+          let n = p.name ? p.name.trim().toUpperCase() : "";
+          let isPlaceholder = (n === "" || n === "EMPTY" || n === "NO PILOT" || n === "NO_PILOT");
+          return isPlaceholder ? "" : p.band;
+      }).filter(b => b);
 
       heat.pilots.forEach((p, pIdx) => {
         const selectEl = document.getElementById(`band_h${heatIdx}_p${pIdx}`);
         if (!selectEl) return;
         
-        // クラスを完全リセット
         selectEl.className = 'band-select';
         
-        // ⚡ 修正: 選択された周波数が、設定リスト(カメラ枠)の何番目かを探し、その色(c0〜c3)を付与する
         if (p.band) { 
             let cIdx = TournamentManager.availableBands.indexOf(p.band);
             if (cIdx !== -1) { selectEl.classList.add('band-c' + (cIdx % 8)); }
@@ -2885,6 +2909,8 @@
         if(this.draftHeats.length === 0) { await showCustomDialog("ドラフトが空です。", false); return; }
         if(await showCustomDialog("このドラフト内容でトーナメントをパブリッシュしますか？\n（進行中のデータはすべて上書きされます）", true)) {
             this.heats = []; this.globalHeatCounter = 1; let targetLapsVal = parseInt(document.getElementById('dirTargetLaps').value, 10) || 3;
+            const perHeat = parseInt(document.getElementById('dirPerHeat').value, 10) || 4; // ⚡ 1ヒートの定員人数を取得
+
             this.draftHeats.forEach(dh => {
                 let mappedPilots = dh.pilots.filter(p => p !== "").map(p => {
                     let pilotData = { name: "", sourceDesc: p };
@@ -2894,6 +2920,12 @@
                     else { pilotData.name = p.trim(); }
                     return pilotData;
                 });
+
+                // ⚡ 修正: 指定された定員（通常4人）に満たない場合、足りない分をEMPTY枠で自動パディングする
+                while (mappedPilots.length < perHeat) {
+                    mappedPilots.push({ name: "EMPTY", sourceDesc: "EMPTY" });
+                }
+
                 this.heats.push({ id: `H${this.globalHeatCounter++}`, round: "DRAFT", name: dh.name, pilots: mappedPilots, targetLaps: targetLapsVal, status: "WAITING", results: [], activationTime: null });
             });
             document.getElementById('directorModal').style.display = 'none'; document.getElementById('btnViewBracket').click();
@@ -2910,6 +2942,8 @@
         
         if(await showCustomDialog("現在の進行中ブラケット（過去の成績・OVERALLランキング）を維持したまま、\nこのドラフト内容を「おかわりレース」として末尾に継ぎ足しますか？", true)) {
             let targetLapsVal = parseInt(document.getElementById('dirTargetLaps').value, 10) || 3;
+            const perHeat = parseInt(document.getElementById('dirPerHeat').value, 10) || 4; // ⚡ 1ヒートの定員人数を取得
+
             this.draftHeats.forEach(dh => {
                 let mappedPilots = dh.pilots.filter(p => p !== "").map(p => {
                     let pilotData = { name: "", sourceDesc: p };
@@ -2920,6 +2954,11 @@
                     return pilotData;
                 });
                 
+                // ⚡ 修正: 指定された定員（通常4人）に満たない場合、足りない分をEMPTY枠で自動パディングする
+                while (mappedPilots.length < perHeat) {
+                    mappedPilots.push({ name: "EMPTY", sourceDesc: "EMPTY" });
+                }
+
                 // ⚡ 既存の this.heats を初期化せずに、そのまま push して追加する
                 this.heats.push({ id: `H${this.globalHeatCounter++}`, round: "DRAFT", name: dh.name, pilots: mappedPilots, targetLaps: targetLapsVal, status: "WAITING", results: [], activationTime: null });
             });
@@ -3220,6 +3259,7 @@
         const activeHeat = this.heats.find(h => h.status === 'ACTIVE');
         if (!activeHeat || !activeHeat.activationTime) return;
 
+        // ⚡ 1. ファイル出力を検知しての通常オートフィニッシュ
         let fileFoundAfterActivation = false;
         let hasValidPilot = false;
 
@@ -3228,14 +3268,13 @@
             if (!s.isPlaceholder) {
                 hasValidPilot = true;
                 const fName = s.sourceFileName;
-                // ⚡ ヒートがACTIVEになった時刻以降に、TVPが新しいリザルトファイルを書き出したか
+                // ⚡ TVPがヒートアクティブ後に新しいリザルトファイルを書き出したかをチェック
                 if (fName && window.latestRawData[fName] && window.latestRawData[fName]._updatedAt > activeHeat.activationTime) {
                     fileFoundAfterActivation = true;
                 }
             }
         }
 
-        // ⚡ TVPからファイルが出力されたことを検知したら、4秒後に自動でフィニッシュする
         if (hasValidPilot && fileFoundAfterActivation) {
             if (!activeHeat._autoFinishTriggered) {
                 activeHeat._autoFinishTriggered = true; // 重複発火を防止
@@ -3245,6 +3284,33 @@
                         this.finishHeat(activeHeat.id, true); // true = 確認ダイアログをスキップ
                     }
                 }, 4000);
+            }
+            return; // ファイルが出た場合はタイムアウト判定は不要
+        }
+
+        // ⚡ 2. リタイア・未出走によるタイムアウト強制終了（フルオート時は即座にTVPを止める）
+        let targetSecs = activeHeat.targetSecs || parseInt(document.getElementById('dirTargetSecs').value, 10) || 180;
+        
+        // ⚡ フルオート時は設定時間+5秒で強制停止。通常時は+35秒（TVPの安全停止後）まで待つ
+        let extraWait = this.isFullAutoEnabled ? 5 : 35;
+        let timeoutMs = (targetSecs + extraWait) * 1000; 
+        
+        if (Date.now() - activeHeat.activationTime > timeoutMs) {
+            if (!activeHeat._autoFinishTriggered) {
+                activeHeat._autoFinishTriggered = true;
+                sysLog(`Timeout reached. Auto Finish triggered for Heat: ${activeHeat.id}`);
+                
+                // ⚡ フルオート時はTVPに強制ストップ指令を放ち、リザルトファイルを吐き出させる
+                if (this.isFullAutoEnabled) {
+                    this.sendTVPCommand('stop');
+                }
+                
+                // ファイル出力と読み込みの猶予を3秒間作ってから、NRD側も強制フィニッシュ
+                setTimeout(() => {
+                    if (activeHeat.status === 'ACTIVE') {
+                        this.finishHeat(activeHeat.id, true); 
+                    }
+                }, 3000);
             }
         }
     },
@@ -3262,10 +3328,41 @@
       }
       let heat = this.heats.find(h => h.id === heatId); if (!heat || heat.status === 'COMPLETED') return;
       let standings = this.getRealtimeStandings(heat); const raceLapsTarget = heat.targetLaps || parseInt(document.getElementById('raceLapsInput').value, 10) || 3;
-      standings.forEach(s => { if (!s.isPlaceholder && s.laps < raceLapsTarget) { s.isDNF = true; s.timeMs = Infinity; s.timeStr = "DNF"; } });
+      
+      standings.forEach(s => { 
+          if (!s.isPlaceholder) {
+              // ⚡ 追加: このヒート中にTVPのファイルが一度も更新されていなければ、過去のデータと見なして失格(DSQ)にする
+              let fName = s.sourceFileName;
+              let isUpdatedInThisHeat = false;
+              if (fName && window.latestRawData[fName] && heat.activationTime && window.latestRawData[fName]._updatedAt > heat.activationTime) {
+                  isUpdatedInThisHeat = true;
+              }
+              
+              if (!isUpdatedInThisHeat) {
+                  s.isDSQ = true;
+                  s.isDNF = false;
+                  s.laps = 0;
+                  s.timeMs = Infinity;
+                  s.timeStr = "DSQ";
+                  s.lapsData = [];
+              } else if (s.laps < raceLapsTarget) { 
+                  s.isDNF = true; 
+                  s.timeMs = Infinity; 
+                  s.timeStr = "DNF"; 
+              }
+          }
+      });
+
       standings.sort((a, b) => {
-          if (a.isPlaceholder && !b.isPlaceholder) return 1; if (!a.isPlaceholder && b.isPlaceholder) return -1;
-          if (a.laps !== b.laps) return b.laps - a.laps; if (a.timeMs === Infinity && b.timeMs === Infinity) return 0; return a.timeMs - b.timeMs;
+          if (a.isPlaceholder && !b.isPlaceholder) return 1; 
+          if (!a.isPlaceholder && b.isPlaceholder) return -1;
+          if (a.isDSQ && !b.isDSQ) return 1;
+          if (!a.isDSQ && b.isDSQ) return -1;
+          if (a.isDNF && !b.isDNF) return 1;
+          if (!a.isDNF && b.isDNF) return -1;
+          if (a.laps !== b.laps) return b.laps - a.laps; 
+          if (a.timeMs === Infinity && b.timeMs === Infinity) return 0; 
+          return a.timeMs - b.timeMs;
       });
       heat.results = standings; heat.status = 'COMPLETED'; 
       
@@ -3295,16 +3392,24 @@
       if (!nextHeat) {
           setTimeout(async () => { if (await showCustomDialog("登録された全ヒートが終了しました。\n現在のランキングを予選結果としてスナップショット保存し、本戦に向けてデータをリセットしますか？\n（※エキシビジョンやテスト走行の場合はキャンセルしてください）", true)) document.getElementById('btnSnapshotReset').click(); }, 500);
       } else {
-          // ⚡ 追加: AUTO FINISH が ON の場合、自動で次のヒートのパイロットをコールする
-          if (this.isAutoFinishEnabled) {
-              // 画面の描画や処理が落ち着くのを少し待ってからコールする
-              setTimeout(() => { this.callHeat(nextHeat.id); }, 1000);
-          }
+          // ⚡ 追加: ヒート名から「HEAT 1」や「H2」などの番号部分を削ったベース名（ステージ名）を取得
+          let getBaseName = (name) => name.replace(/(?:\s-\s)?(?:HEAT\s|H|MATCH|R\d+[-H]*)\d*$/i, '').trim();
+          let isStageChanged = getBaseName(heat.name) !== getBaseName(nextHeat.name);
 
-          // ⚡ 追加: オートネクストがONの場合、次のヒートのカウントダウンを開始
-          if (this.isAutoNextEnabled) {
-              this.startCountdown(nextHeat.id);
-          }
+          if (isStageChanged && !this.isFullAutoEnabled) {
+             // ⚡ 通常時：ステージが変わる場合のみ、音声を鳴らして待機する
+             sysLog(`Stage Changed from "${heat.name}" to "${nextHeat.name}". Interval triggered.`);
+             SoundManager.triggerDucking();
+             SoundManager.play('interval'); // [SETTINGS]で設定した音声ファイルを再生
+         } else {
+             // ⚡ 同一ステージ、またはフルオート中のステージ変更：音声を鳴らさずシームレスに自動進行
+             if (this.isAutoFinishEnabled) {
+                 setTimeout(() => { this.callHeat(nextHeat.id); }, 1000);
+             }
+             if (this.isAutoNextEnabled) {
+                 this.startCountdown(nextHeat.id);
+             }
+         }
       }
     },
 
@@ -3518,7 +3623,18 @@
               nameSpan = `<span class="${rankClass} hc-pilot-name ${fxClass}" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block;" contenteditable="true" onblur="TournamentManager.updatePilot('${heat.id}', ${s.originalIndex}, this.innerText)">${s.displayName}</span>`;
           }
           
-          let timeDisplay = s.isDNF ? `<span style="color:var(--neon-pink);">DNF</span>` : s.timeStr;
+          // ⚡ A案の視覚的アプローチ（改）: 過去のベストであることを明確なテキストで記載し、色を落として2段表示にする
+          let timeDisplay = "";
+          if (s.isDNF) {
+              timeDisplay = `<span style="color:var(--neon-pink);">DNF</span>`;
+          } else if (heat.status === 'WAITING' && s.timeStr !== "-:-.-") {
+              timeDisplay = `<div style="display:flex; flex-direction:column; align-items:flex-end; line-height:1.1; margin-top:-4px;">
+                                <span style="font-family:'Orbitron'; font-size:8px; color:#888; letter-spacing:0.5px;">PREV.BEST</span>
+                                <span style="color:#aaa; font-size:14px; font-style:italic;">${s.timeStr}</span>
+                             </div>`;
+          } else {
+              timeDisplay = s.timeStr;
+          }
           
           let gapStr = "";
           if (heat.status === 'COMPLETED' && pIdx > 0 && !s.isPlaceholder && !standings[pIdx-1].isPlaceholder) {
@@ -3620,6 +3736,9 @@
         if (!directoryHandle) return;
         try {
             let pilotsToSync = [];
+            let currentLaps = 3;
+            let currentSecs = 180;
+
             // ACTIVEなヒートを探す。無ければ次に控えているWAITINGを探す
             let targetHeat = this.heats.find(h => h.status === 'ACTIVE') || this.heats.find(h => h.status === 'WAITING');
 
@@ -3635,12 +3754,21 @@
                 while (pilotsToSync.length < 4) {
                     pilotsToSync.push({ "name": "No Pilot" });
                 }
+
+                // ⚡ 追加: 現在のヒートに設定されている周回数と制限時間を取得
+                currentLaps = targetHeat.targetLaps || 3;
+                currentSecs = targetHeat.targetSecs || 180;
             } else {
                 // 対象が無ければ全員 No Pilot にする
                 pilotsToSync = [{ "name": "No Pilot" }, { "name": "No Pilot" }, { "name": "No Pilot" }, { "name": "No Pilot" }];
             }
 
-            const payload = { "pilots": pilotsToSync };
+            // ⚡ 追加: NRD_SYNC_JSON のペイロードに周回数と制限時間を同封する
+            const payload = { 
+                "pilots": pilotsToSync,
+                "targetLaps": currentLaps,
+                "targetSecs": currentSecs
+            };
 
             // ⚡ 追加: ペンディングされたコマンドがあれば同封して安全にクリア
             if (this.pendingCommand) {
@@ -3848,6 +3976,28 @@
                   e.target.innerText = 'ON';
                   e.target.classList.add('active-mode');
                   e.target.style.color = 'var(--neon-pink)';
+              } else {
+                  e.target.innerText = 'OFF';
+                  e.target.classList.remove('active-mode');
+                  e.target.style.color = '';
+              }
+          });
+      }
+
+      const btnFullAuto = document.getElementById('btnToggleFullAuto');
+      if (btnFullAuto) {
+          btnFullAuto.addEventListener('click', (e) => {
+              TournamentManager.isFullAutoEnabled = !TournamentManager.isFullAutoEnabled;
+              if (TournamentManager.isFullAutoEnabled) {
+                  e.target.innerText = 'ON';
+                  e.target.classList.add('active-mode');
+                  e.target.style.color = 'var(--neon-green)';
+                  TournamentManager.isAutoNextEnabled = true;
+                  const anBtn = document.getElementById('btnToggleAutoNext');
+                  if(anBtn) { anBtn.innerText = 'ON'; anBtn.classList.add('active-mode'); anBtn.style.color = 'var(--neon-yellow)'; }
+                  TournamentManager.isAutoFinishEnabled = true;
+                  const afBtn = document.getElementById('btnToggleAutoFinish');
+                  if(afBtn) { afBtn.innerText = 'ON'; afBtn.classList.add('active-mode'); afBtn.style.color = 'var(--neon-pink)'; }
               } else {
                   e.target.innerText = 'OFF';
                   e.target.classList.remove('active-mode');
@@ -4377,9 +4527,10 @@
   }
 
   const SoundManager = {
-    sounds: { startup: null, new: null, up: null, record: null, fanfare: null, announce: null, lottery: null }, activeAudios: {}, audioCtx: null, lastPlayTime: { startup: 0, new: 0, up: 0, record: 0, fanfare: 0, announce: 0, lottery: 0 }, isDucking: false, duckingTimeout: null, ceremonyTimeout: null,
+    // ⚡ 修正: interval サウンドスロットを追加
+    sounds: { startup: null, new: null, up: null, record: null, fanfare: null, announce: null, lottery: null, interval: null }, activeAudios: {}, audioCtx: null, lastPlayTime: { startup: 0, new: 0, up: 0, record: 0, fanfare: 0, announce: 0, lottery: 0, interval: 0 }, isDucking: false, duckingTimeout: null, ceremonyTimeout: null,
     initContext: function() { if (!this.audioCtx) { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if(this.audioCtx.state === 'suspended') this.audioCtx.resume(); } },
-    loadAll: async function() { this.sounds.startup = await loadSetting('sound_startup'); this.sounds.new = await loadSetting('sound_new'); this.sounds.up = await loadSetting('sound_up'); this.sounds.record = await loadSetting('sound_record'); this.sounds.fanfare = await loadSetting('sound_fanfare'); this.sounds.announce = await loadSetting('sound_announce'); this.sounds.lottery = await loadSetting('sound_lottery'); },
+    loadAll: async function() { this.sounds.startup = await loadSetting('sound_startup'); this.sounds.new = await loadSetting('sound_new'); this.sounds.up = await loadSetting('sound_up'); this.sounds.record = await loadSetting('sound_record'); this.sounds.fanfare = await loadSetting('sound_fanfare'); this.sounds.announce = await loadSetting('sound_announce'); this.sounds.lottery = await loadSetting('sound_lottery'); this.sounds.interval = await loadSetting('sound_interval'); },
     saveSound: async function(type, dataUrl) { this.sounds[type] = dataUrl; await saveSetting('sound_' + type, dataUrl); sysLog(`Sound saved: ${type}`);},
     clearSound: async function(type) { this.sounds[type] = null; await saveSetting('sound_' + type, null); document.getElementById('soundInput_' + type).value = ""; sysLog(`Sound cleared: ${type}`); alert('設定をクリアしました。'); },
     triggerDucking: function() {
