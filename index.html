@@ -881,14 +881,14 @@
       <h3 style="margin:0 0 10px 0; font-size:14px; color:var(--neon-yellow);">⌨️ Keyboard Shortcuts</h3>
       <table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">
         <tr><th style="padding:4px; border-bottom:1px solid #444; color:var(--neon-cyan);">KEY</th><th style="padding:4px; border-bottom:1px solid #444; color:var(--neon-cyan);">ACTION</th><th style="padding:4px; border-bottom:1px solid #444; color:var(--neon-cyan);">KEY</th><th style="padding:4px; border-bottom:1px solid #444; color:var(--neon-cyan);">ACTION</th></tr>
-        <tr><td style="padding:4px;">[ 1 ]</td><td>Change View (Dual/Best/Race)</td><td style="padding:4px;">[ C ]</td><td>Call Active/Waiting Heat</td></tr>
-        <tr><td style="padding:4px;">[ 2 ]</td><td>View: BRACKET</td><td style="padding:4px;">[ V ] / [ E ]</td><td>Finish Active Heat / Start Next</td></tr>
-        <tr><td style="padding:4px;">[ 3 ]</td><td>View: OVERALL</td><td style="padding:4px;">[ X ]</td><td>Trigger FX Play</td></tr>
+        <tr><td style="padding:4px;">[ 1 ]</td><td>Change View (Dual/Best/Race)</td><td style="padding:4px;">[ A ]</td><td>Call Active/Waiting Heat</td></tr>
+        <tr><td style="padding:4px;">[ 2 ]</td><td>View: BRACKET</td><td style="padding:4px;">[ E ] / [ Enter ]</td><td>Finish Active Heat / Start Next</td></tr>
+        <tr><td style="padding:4px;">[ 3 ]</td><td>View: OVERALL</td><td style="padding:4px;">[ Space ]</td><td>Stop TVP (計測終了)</td></tr>
         <tr><td style="padding:4px;">[ 4 ]</td><td>View: SERIES</td><td style="padding:4px;">[ P ]</td><td>Toggle Ceremony</td></tr>
-        <tr><td style="padding:4px;">[ D ]</td><td>Toggle Dashboard</td><td style="padding:4px;">[ B ]</td><td>Toggle BGM Play/Pause</td></tr>
-        <tr><td style="padding:4px;">[ F ]</td><td>Toggle Fullscreen</td><td style="padding:4px;">[ N ]</td><td>Play Next BGM</td></tr>
-        <tr><td style="padding:4px;">[ M ]</td><td>Open Director Modal</td><td style="padding:4px;">[ < ] / [ > ]</td><td>Volume Down / Up</td></tr>
-        <tr><td style="padding:4px;">[ S ]</td><td>Toggle Auto Scroll</td><td style="padding:4px;"></td><td></td></tr>
+        <tr><td style="padding:4px;">[ D ]</td><td>Toggle Dashboard</td><td style="padding:4px;">[ J ]</td><td>Toggle BGM Play/Pause</td></tr>
+        <tr><td style="padding:4px;">[ F ]</td><td>Toggle Fullscreen</td><td style="padding:4px;">[ K ]</td><td>Play Next BGM</td></tr>
+        <tr><td style="padding:4px;">[ O ]</td><td>Open Director Modal</td><td style="padding:4px;">[ [ ] / [ ] ]</td><td>Volume Down / Up</td></tr>
+        <tr><td style="padding:4px;">[ S ]</td><td>Toggle Auto Scroll</td><td style="padding:4px; color:var(--neon-yellow); font-weight:bold;">[ Z,X,C,V... ]</td><td style="color:var(--neon-yellow); font-weight:bold;">Manual Lap Trigger</td></tr>
       </table>
     </div>
 
@@ -1088,9 +1088,17 @@
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;"><span style="width:120px; font-size:10px; color:var(--neon-pink); font-weight:bold;">LOTTERY (抽選)</span><input type="file" id="soundInput_lottery" accept="audio/*" style="flex:1; font-size:10px;"><button class="mecha-btn btn-test" onclick="SoundManager.testPlay('lottery')">TEST</button><button class="mecha-btn btn-action" style="color:var(--neon-pink); border-bottom-color:var(--neon-pink);" onclick="SoundManager.clearSound('lottery')">CLR</button></div>
       <div style="display:flex; align-items:center; gap:10px;"><span style="width:120px; font-size:10px; color:var(--neon-yellow);">ANNOUNCE</span><input type="file" id="soundInput_announce" accept="audio/*" style="flex:1; font-size:10px;"><button class="mecha-btn btn-test" onclick="SoundManager.testPlay('announce')">TEST</button><button class="mecha-btn btn-action" style="color:var(--neon-pink); border-bottom-color:var(--neon-pink);" onclick="SoundManager.clearSound('announce')">CLR</button></div>
      <!-- ⚡ 追加: ステージ切替用インターバル音声のアップロードスロット -->
-     <div style="display:flex; align-items:center; gap:10px; margin-top:5px;"><span style="width:120px; font-size:10px; color:var(--neon-orange); font-weight:bold;">INTERVAL (R-CHANGE)</span><input type="file" id="soundInput_interval" accept="audio/*" style="flex:1; font-size:10px;"><button class="mecha-btn btn-test" onclick="SoundManager.testPlay('interval')">TEST</button><button class="mecha-btn btn-action" style="color:var(--neon-pink); border-bottom-color:var(--neon-pink);" onclick="SoundManager.clearSound('interval')">CLR</button></div>
+      <div style="display:flex; align-items:center; gap:10px; margin-top:5px;"><span style="width:120px; font-size:10px; color:var(--neon-orange); font-weight:bold;">INTERVAL (R-CHANGE)</span><input type="file" id="soundInput_interval" accept="audio/*" style="flex:1; font-size:10px;"><button class="mecha-btn btn-test" onclick="SoundManager.testPlay('interval')">TEST</button><button class="mecha-btn btn-action" style="color:var(--neon-pink); border-bottom-color:var(--neon-pink);" onclick="SoundManager.clearSound('interval')">CLR</button></div>
     </div>
   </div>
+</div>
+
+<!-- ⚡ 追加: 手動トリガー専用 横並びコンソール -->
+<div id="lapTriggerConsole" style="display: none; position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 50; background: rgba(5,10,15,0.95); border: 2px solid var(--neon-cyan); border-radius: 8px; padding: 10px 20px; box-shadow: 0 0 30px rgba(0,243,255,0.3); backdrop-filter: blur(5px);">
+  <div style="font-size:10px; color:var(--neon-cyan); margin-bottom:8px; text-align:center; font-weight:bold; letter-spacing:2px;">
+    ⚡ MANUAL LAP TRIGGER CONSOLE ⚡
+  </div>
+  <div id="lapTriggerButtons" style="display: flex; gap: 15px; justify-content: center;"></div>
 </div>
 
 <script>
@@ -3011,11 +3019,22 @@
         }
     },
 
-    // ⚡ 追加: TVPへ任意のコマンドを発射する汎用メソッド
-    sendTVPCommand: function(cmd) {
-        this.pendingCommand = cmd;
+    // ⚡ 修正: TVPへ任意のコマンドとカメラ番号を発射するメソッド
+    sendTVPCommand: function(cmd, camIndex = -1) {
+        if (camIndex !== -1) {
+            this.pendingCommand = `${cmd}:${camIndex + 1}`; // 例: "lap_add:1"
+        } else {
+            this.pendingCommand = cmd;
+        }
         this.syncToTVP();
-        sysLog(`Command '${cmd}' sent to TVP.`);
+        sysLog(`Command '${this.pendingCommand}' sent to TVP.`);
+    },
+
+    // ⚡ 追加: 誤爆を防ぐための削除確認ダイアログ
+    confirmLapDel: async function(camIndex, pilotName) {
+        if (await showCustomDialog(`【警告】\n${pilotName} の直近のラップを取り消しますか？\n（※自動検知・手動問わず、最後の1周分が消去されます）`, true)) {
+            this.sendTVPCommand('lap_del', camIndex);
+        }
     },
 
     // ⚡ 追加: インターバルタイマーの開始処理
@@ -3696,16 +3715,19 @@
              }
           }
 
-          // ⚡ 修正: 進行中は「LAP FIX」、確定後(COMPLETED)は「RESULT STATS(閲覧専用)」ボタンを表示する
+          // ⚡ 修正: 進行中は「LAP FIX」と「手動計測ボタン」、確定後(COMPLETED)は「RESULT STATS(閲覧専用)」ボタンを表示する
           let statsBtnHtml = '';
           if (!s.isPlaceholder) {
               if (heat.status !== 'COMPLETED') {
                   statsBtnHtml = `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="TournamentManager.openStats('${s.sourceFileName}', '${s.displayName}', false)">🔧 LAP FIX</button>`;
+                  // ⚡ 追加: +LAP と -DEL ボタン
+                  statsBtnHtml += `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; border-color:var(--neon-green); color:var(--neon-green); margin-left:4px;" onclick="TournamentManager.sendTVPCommand('lap_add', ${s.originalIndex})">+ LAP</button>`;
+                  statsBtnHtml += `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; border-color:var(--neon-pink); color:var(--neon-pink); margin-left:4px;" onclick="TournamentManager.confirmLapDel(${s.originalIndex}, '${s.displayName}')">- DEL</button>`;
               } else {
                   statsBtnHtml = `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; border-color:#888; color:#ccc;" onclick="TournamentManager.openStats('${s.sourceFileName}', '${s.displayName}', true)">📊 RESULT STATS</button>`;
               }
           }
-          let copyBtnHtml = !s.isPlaceholder ? `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; opacity:0.7;" onclick="TournamentManager.copyPilotName(this, '${s.displayName}')">COPY</button>` : '';
+          let copyBtnHtml = !s.isPlaceholder ? `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; opacity:0.7; margin-left:4px;" onclick="TournamentManager.copyPilotName(this, '${s.displayName}')">COPY</button>` : '';
 
           // ⚡ tdタグに直接 display:flex を書くのをやめ、divで安全にラップしてレイアウト崩れを防ぐ
           return `<tr>
@@ -3779,7 +3801,71 @@
       
       // ⚡ 追加: TVPへの自動同期を実行
       this.syncToTVP();
+
+      // ⚡ 追加: 手動トリガー用コンソールの更新
+      this.updateLapTriggerConsole();
     }, // ←★ここにカンマが必要です
+
+    // ⚡ 追加: 横並びの手動トリガーコンソールを生成・更新する処理
+    updateLapTriggerConsole: function() {
+        const consoleEl = document.getElementById('lapTriggerConsole');
+        const container = document.getElementById('lapTriggerButtons');
+        if (!consoleEl || !container) return;
+
+        const activeHeat = this.heats.find(h => h.status === 'ACTIVE');
+        if (!activeHeat) {
+            consoleEl.style.display = 'none';
+            return;
+        }
+
+        // キーボードの下段の横一列（左から4枠用）
+        const triggerKeys = ['Z', 'X', 'C', 'V', 'B', 'N', 'M', ','];
+        const standings = this.getRealtimeStandings(activeHeat);
+        
+        container.innerHTML = '';
+        let hasValidPilot = false;
+
+        // 画面の並び順とキーボードの指を直感的にリンクさせるため、スロット順(枠順)に並べる
+        let sortedStandings = [...standings].sort((a,b) => a.originalIndex - b.originalIndex);
+
+        sortedStandings.forEach(s => {
+            if (!s.isPlaceholder) {
+                hasValidPilot = true;
+                const keyChar = triggerKeys[s.originalIndex] || '?';
+                
+                // カメラ枠の色に合わせてボタンの色を変える（直感的な操作をアシスト）
+                let cIdx = TournamentManager.availableBands.indexOf(s.originalData.band);
+                let colorVar = 'var(--neon-cyan)';
+                if (cIdx === 0) colorVar = '#ff3c3c'; // 赤枠 (1P)
+                if (cIdx === 1) colorVar = '#3cff3c'; // 緑枠 (2P)
+                if (cIdx === 2) colorVar = '#3c9dff'; // 青枠 (3P)
+                if (cIdx === 3) colorVar = '#fcee0a'; // 黄枠 (4P)
+
+                const btnHtml = `
+                    <div style="display:flex; flex-direction:column; align-items:center; width: 130px; background: #000; border: 2px solid ${colorVar}; border-radius: 6px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                        <div style="background: ${colorVar}; color: #000; width: 100%; text-align: center; font-weight: bold; font-size: 11px; padding: 4px 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            ${s.displayName}
+                        </div>
+                        <div style="padding: 15px 0 20px 0; width: 100%; display:flex; justify-content:center;">
+                            <button id="lapTriggerBtn_${s.originalIndex}" class="mecha-btn" style="width: 80%; padding: 15px 0; font-size: 28px; border-color: ${colorVar}; color: ${colorVar}; font-weight:bold; border-radius: 4px; transition: all 0.1s;" onclick="TournamentManager.sendTVPCommand('lap_add', ${s.originalIndex})">
+                                [ ${keyChar} ]
+                            </button>
+                        </div>
+                        <button class="mecha-btn" style="width:100%; border:none; border-top:1px solid #333; font-size:10px; padding:8px 0; color:var(--neon-pink); background:rgba(255,0,60,0.1);" onclick="TournamentManager.sendTVPCommand('lap_del', ${s.originalIndex})">
+                            - DEL (Shift+${keyChar})
+                        </button>
+                    </div>
+                `;
+                container.innerHTML += btnHtml;
+            }
+        });
+
+        if (hasValidPilot) {
+            consoleEl.style.display = 'block';
+        } else {
+            consoleEl.style.display = 'none';
+        }
+    },
 
     // ----------------------------------------------------------
     // ⚡ 追加: TVPへ現在アクティブなパイロット名を自動転送するモジュール
@@ -4004,7 +4090,20 @@
       btnOverall.addEventListener('click', () => setViewMode('overall'));
       btnSeries.addEventListener('click', () => setViewMode('series'));
       
-      raceLapsInput.addEventListener('change', () => { triggerRecalculation(); });
+      // ⚡ 修正: 周回数やオートタイマーの設定を変更した際に自動保存する処理を追加
+      raceLapsInput.addEventListener('change', async (e) => { 
+          await saveSetting('target_laps', e.target.value);
+          triggerRecalculation(); 
+      });
+      
+      const autoNextSecInput = document.getElementById('autoNextSecInput');
+      if (autoNextSecInput) {
+          autoNextSecInput.addEventListener('change', async (e) => {
+              await saveSetting('auto_next_secs', e.target.value);
+              sysLog(`Auto Next interval saved: ${e.target.value}s`);
+          });
+      }
+
       dateSelector.addEventListener('change', () => { updateUI(); });
 
       // ⚡ 追加: オートネクスト & オートフィニッシュのON/OFFトグルイベント
@@ -4506,6 +4605,16 @@
       await loadEditedLapData(); // ⚡ 更新
       await loadTheme();
       await loadUpdateEffect(); // ⚡ エフェクトのロードを追加
+
+      // ⚡ 追加: 保存された設定値（周回数・オートネクスト秒数）の復元
+      const savedLaps = await loadSetting('target_laps');
+      if (savedLaps && raceLapsInput) raceLapsInput.value = savedLaps;
+      
+      const savedAutoNextSecs = await loadSetting('auto_next_secs');
+      if (savedAutoNextSecs && document.getElementById('autoNextSecInput')) {
+          document.getElementById('autoNextSecInput').value = savedAutoNextSecs;
+      }
+
       sysLog('Configurations Loaded.');
     } catch(e) {
       sysLog(`IndexedDB Load Error: ${e.message}`, 'warn');
@@ -5354,7 +5463,6 @@
     if (!selectedDate || !activeDataBest) { await showCustomDialog("エクスポートするデータがありません。", false); return; }
     const btn = document.getElementById('btnExportCloud'); btn.innerText = "[ EXPORTING... ]"; btn.style.borderColor = "var(--neon-yellow)"; btn.style.color = "var(--neon-yellow)";
     
-    // ⚡ 追加: 設定画面の大会名を取得
     const sysTitleInput = document.getElementById('sysTitleInput');
     const sysTitle = sysTitleInput ? sysTitleInput.value : "WTW SHIZUOKA result";
     
@@ -5374,6 +5482,35 @@
 
     let tourneyData = [];
     let overallRanking = TournamentManager.getOverallRanking();
+    
+    // ⚡ 追加: グラフ描画用の詳細ラップデータを格納する専用オブジェクト
+    let lapDetails = {};
+
+    // ⚡ 予選 (BEST LAP) のラップデータを格納
+    lapDetails["【 BEST LAP RANKING 】"] = {};
+    if (activeDataBest) {
+      activeDataBest.forEach(data => {
+        let fName = data.sourceFile || TournamentManager.findLatestSourceFile(data.name);
+        if (fName && window.latestRawData[fName] && window.latestRawData[fName][data.name]) {
+            let computed = getComputedLaps(fName, data.name, window.latestRawData[fName][data.name].rawTotalsMs);
+            let finalLaps = computed.filter(c => !c.isIgnored && !c.isGhost).map(c => ({ lapNum: c.lapNum, durationSec: c.durationMs / 1000, isFixed: c.splitTotal > 1 || c.isManualOverride }));
+            lapDetails["【 BEST LAP RANKING 】"][data.name] = { lapsData: finalLaps, totalTime: data.total || "-:-.-" };
+        }
+      });
+    }
+
+    // ⚡ 予選 (RACE RANKING) のラップデータを格納
+    lapDetails["【 RACE (TOTAL TIME) RANKING 】"] = {};
+    if (activeDataRace) {
+      activeDataRace.forEach(data => {
+        let fName = data.sourceFile || TournamentManager.findLatestSourceFile(data.name);
+        if (fName && window.latestRawData[fName] && window.latestRawData[fName][data.name]) {
+            let computed = getComputedLaps(fName, data.name, window.latestRawData[fName][data.name].rawTotalsMs);
+            let finalLaps = computed.filter(c => !c.isIgnored && !c.isGhost).map(c => ({ lapNum: c.lapNum, durationSec: c.durationMs / 1000, isFixed: c.splitTotal > 1 || c.isManualOverride }));
+            lapDetails["【 RACE (TOTAL TIME) RANKING 】"][data.name] = { lapsData: finalLaps, totalTime: data.total || "-:-.-" };
+        }
+      });
+    }
 
     if (TournamentManager.heats && TournamentManager.heats.length > 0) {
       tourneyData.push(["【 TOURNAMENT OVERALL RANKING 】", "", "", "", "", "", ""], ["POS", "PILOT_ID", "LAST_HEAT", "LAPS", "TIME", "STATUS", ""]);
@@ -5384,21 +5521,33 @@
       
       TournamentManager.heats.forEach(heat => {
         let standings = TournamentManager.getRealtimeStandings(heat);
+        
+        // ⚡ 各ヒートのデータ格納場所を準備
+        lapDetails[heat.name] = {};
+
         standings.forEach((s, i) => {
           let gapStr = (heat.status === 'COMPLETED' && i > 0 && !s.isDNF && !standings[i-1].isDNF && s.laps === standings[i-1].laps) ? `+${((s.timeMs - standings[i-1].timeMs) / 1000).toFixed(2)}` : "-";
           tourneyData.push([heat.name, heat.status, (heat.status === 'COMPLETED') ? (i + 1) : "-", s.displayName, s.isPlaceholder ? "-" : s.laps, s.isPlaceholder ? "" : (s.isDNF ? "DNF" : s.timeStr), gapStr]);
+          
+          // ⚡ 追加: 有効なパイロットの詳細ラップデータを抽出して保存
+          if (!s.isPlaceholder && s.lapsData && s.lapsData.length > 0) {
+              lapDetails[heat.name][s.displayName] = {
+                  lapsData: s.lapsData,
+                  totalTime: s.isDNF ? "DNF" : s.timeStr
+              };
+          }
         });
         tourneyData.push(["", "", "", "", "", "", ""]);
       });
     }
 
-    // ⚡ 修正: スプレッドシート（CLOUD EXPORT）には不要なアイコンデータを除外して超軽量化
+    // ⚡ payloadに lapDetails(グラフデータ) を同梱してクラウドへ送信
     const payload = { 
         date: selectedDate, 
         tournamentName: sysTitle, 
         qualify: qualData, 
-        tournament: tourneyData
-        // icons: window.cloudIconCache || {}  ← これを削除しました
+        tournament: tourneyData,
+        lapDetails: lapDetails 
     };
 
     try {
@@ -5467,35 +5616,44 @@
       case '4': document.getElementById('btnViewSeries')?.click(); break;
       case 'd': document.getElementById('btnToggleDash')?.click(); break;
       case 'f': document.getElementById('btnFullscreen')?.click(); break;
-      case 'm':
+      
+      // ⚡ 修正: Mキー（7枠目トリガー）と競合するため、O (Open) に変更
+      case 'o':
         const dirModal = document.getElementById('directorModal');
         if (dirModal && dirModal.style.display === 'flex') { dirModal.style.display = 'none'; } 
         else { document.getElementById('btnOpenDirector')?.click(); }
         break;
-      case 'n': document.getElementById('btnBgmNext')?.click(); break;
-      case 'c':
+        
+      // ⚡ 修正: Nキー（6枠目トリガー）と競合するため、K (sKip) に変更
+      case 'k': document.getElementById('btnBgmNext')?.click(); break;
+      
+      // ⚡ 修正: Cキー（3枠目トリガー）と競合するため、A (Announce) に変更
+      case 'a':
         const heatToCall = TournamentManager.heats.find(h => h.status === 'ACTIVE') || TournamentManager.heats.find(h => h.status === 'WAITING');
         if (heatToCall) TournamentManager.callHeat(heatToCall.id);
         break;
-      case 'v':
+        
+      // ⚡ 修正: Vキー（4枠目トリガー）との競合を排除。E (End) または Enterキー に変更
+      case 'enter':
       case 'e':
         const activeForShortcut = TournamentManager.heats.find(h => h.status === 'ACTIVE');
         if (activeForShortcut) { TournamentManager.finishHeat(activeForShortcut.id); } 
         else { const nextWait = TournamentManager.heats.find(h => h.status === 'WAITING'); if (nextWait) TournamentManager.toggleHeatState(nextWait.id); }
         break;
-      case 'b': if (bgmAudio.paused) { document.getElementById('btnBgmPlay')?.click(); } else { document.getElementById('btnBgmOff')?.click(); } break;
+        
+      // ⚡ 修正: Bキー（5枠目トリガー）と競合するため、J (Jukebox) に変更
+      case 'j': if (bgmAudio.paused) { document.getElementById('btnBgmPlay')?.click(); } else { document.getElementById('btnBgmOff')?.click(); } break;
+      
       case 'p': document.getElementById('btnPlayCeremony')?.click(); break;
       case 's': document.getElementById('btnAutoScroll')?.click(); break;
-      case 'x': document.getElementById('btnManualFx')?.click(); break;
       
-      // ⚡ 追加: NRD上でスペースキーを押した際、TVPへ強制ストップ指令を送る
       case ' ': 
         e.preventDefault(); 
         TournamentManager.sendTVPCommand('stop'); 
         break;
 
       case '[':
-      case ',':
+        // ⚡ 修正: カンマ(,) キーが8枠目トリガーと競合するため削除
         e.preventDefault(); userBgmVolume = Math.round(Math.max(0, userBgmVolume - 0.05) * 100) / 100;
         document.getElementById('bgmVolumeSlider').value = userBgmVolume; if (!SoundManager.isDucking) bgmAudio.volume = userBgmVolume;
         break;
@@ -5504,6 +5662,70 @@
         e.preventDefault(); userBgmVolume = Math.round(Math.min(1, userBgmVolume + 0.05) * 100) / 100;
         document.getElementById('bgmVolumeSlider').value = userBgmVolume; if (!SoundManager.isDucking) bgmAudio.volume = userBgmVolume;
         break;
+    }
+
+    // ⚡ 修正: 横並びラップトリガー (キーボード同時押し・ピアノ打ち完全対応)
+    const triggerKeys = ['z', 'x', 'c', 'v', 'b', 'n', 'm', ','];
+    const keyIdx = triggerKeys.indexOf(e.key.toLowerCase());
+    
+    if (keyIdx !== -1) {
+        // キーのリピート（長押しによる連射）を物理的に無効化し、誤爆を防ぐ
+        if (e.repeat) return;
+        
+        const activeHeat = TournamentManager.heats.find(h => h.status === 'ACTIVE');
+        if (activeHeat) {
+            const p = activeHeat.pilots[keyIdx];
+            if (p) {
+                let rawName = p.name ? p.name.trim() : "";
+                let isPlaceholder = (rawName === "" || rawName.toUpperCase() === "EMPTY" || rawName === "No Pilot" || rawName === "No_Pilot");
+                
+                if (!isPlaceholder) {
+                    e.preventDefault(); // デフォルトの入力をブロック
+                    
+                    // ⚡ setTimeout(0) を使うことで、ブラウザのメインスレッドをブロックせず、
+                    // 複数のキー入力イベントを「ほぼ同時（非同期）」に並列処理させる
+                    setTimeout(() => {
+                        if (e.shiftKey) {
+                            // Shiftキー同時押しで即削除 (- DEL)
+                            TournamentManager.sendTVPCommand('lap_del', keyIdx);
+                            
+                            // 削除時の赤フラッシュエフェクト
+                            const btn = document.getElementById(`lapTriggerBtn_${keyIdx}`);
+                            if (btn) {
+                                const originalBg = btn.style.backgroundColor;
+                                const originalCol = btn.style.color;
+                                btn.style.backgroundColor = "var(--neon-pink)";
+                                btn.style.color = "#000";
+                                btn.style.transform = "scale(0.95)";
+                                setTimeout(() => {
+                                    btn.style.backgroundColor = originalBg;
+                                    btn.style.color = originalCol;
+                                    btn.style.transform = "scale(1)";
+                                }, 150);
+                            }
+                        } else {
+                            // 通常押しでラップ追加 (+ LAP)
+                            TournamentManager.sendTVPCommand('lap_add', keyIdx);
+                            
+                            // 追加時の反転フラッシュエフェクト
+                            const btn = document.getElementById(`lapTriggerBtn_${keyIdx}`);
+                            if (btn) {
+                                const originalBg = btn.style.backgroundColor;
+                                const originalCol = btn.style.color;
+                                btn.style.backgroundColor = btn.style.borderColor;
+                                btn.style.color = "#000";
+                                btn.style.transform = "scale(0.95)";
+                                setTimeout(() => {
+                                    btn.style.backgroundColor = originalBg;
+                                    btn.style.color = originalCol;
+                                    btn.style.transform = "scale(1)";
+                                }, 150);
+                            }
+                        }
+                    }, 0);
+                }
+            }
+        }
     }
   });
 </script>
