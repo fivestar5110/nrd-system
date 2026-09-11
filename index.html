@@ -6,6 +6,8 @@
   <title>N.R.D  v32.1</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- ⚡ 追加: OBS WebSocket 通信ライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/obs-websocket-js@5.0.2/dist/obs-ws.min.js"></script>
   <style>
     /* 共通 CSS変数 */
     :root {
@@ -1105,6 +1107,47 @@
   // ====================================================
   // 1. グローバル変数 & 基礎システム
   // ====================================================
+  // ⚡ 追加: OBS WebSocket 自動録画モジュール
+  const OBSManager = {
+      obs: new OBSWebSocket(),
+      isConnected: false,
+      
+      init: async function() {
+          try {
+              // OBSのWebSocketサーバー (v5) に接続
+              await this.obs.connect('ws://localhost:4455');
+              this.isConnected = true;
+              sysLog('OBS WebSocket Connected successfully.', 'info');
+              
+              this.obs.on('ConnectionClosed', () => {
+                  this.isConnected = false;
+                  sysLog('OBS WebSocket Disconnected. Retrying in 5s...', 'warn');
+                  setTimeout(() => this.init(), 5000);
+              });
+          } catch (error) {
+              sysLog(`OBS WebSocket Connection Failed: Please ensure OBS is running.`, 'warn');
+              // 失敗しても5秒ごとにリトライし続ける（OBSを後から立ち上げても繋がるようにする泥臭い設計）
+              setTimeout(() => this.init(), 5000); 
+          }
+      },
+      startRecord: async function() {
+          if (!this.isConnected) return;
+          try {
+              await this.obs.call('StartRecord');
+              sysLog('OBS Recording STARTED.', 'info');
+          } catch (e) { sysLog(`OBS StartRecord Error: ${e.message}`, 'warn'); }
+      },
+      stopRecord: async function() {
+          if (!this.isConnected) return;
+          try {
+              await this.obs.call('StopRecord');
+              sysLog('OBS Recording STOPPED.', 'info');
+          } catch (e) { sysLog(`OBS StopRecord Error: ${e.message}`, 'warn'); }
+      }
+  };
+
+  window.addEventListener('DOMContentLoaded', () => { OBSManager.init(); });
+
   let gasExportUrl = 'https://script.google.com/macros/s/AKfycbwheM89lUVgh3uwngYO7KXC4jYct80sUiIsLF8_ELQrA7nakXwkYztTgh_x_9f-mI84/exec';
   
   let directoryHandle, iconDirHandle, bgmHandle;
@@ -1876,34 +1919,73 @@
     // ⚡ 追加: 周波数アシスト機能 ロジック部
     availableBands: ['E2', 'E1', 'F3', 'F5'],
 
-    // ⚡ 追加: バンドに基づく自動ソート処理（コンフリクトがない場合のみ発動）
+    // ⚡ 修正: 周波数に合わせた絶対位置の並べ替え（EMPTY枠キープ対応版）
     checkAndSortHeatPilots: function(heat) {
         if (heat.status === 'COMPLETED') return false;
-        // ⚡ 修正: EMPTY枠（プレースホルダー）を含む場合は完全ではないため、自動ソートをストップする
-        let isFullyPopulated = heat.pilots.length > 0 && heat.pilots.every(p => {
+
+        // 1. 実在するパイロットと、EMPTY(空き枠)のストックを分ける
+        let realPilots = [];
+        let emptyStock = [];
+        
+        heat.pilots.forEach(p => {
             let n = p.name ? p.name.trim().toUpperCase() : "";
-            return n && n !== "EMPTY" && n !== "NO PILOT" && n !== "NO_PILOT";
+            let isPlaceholder = (n === "" || n === "EMPTY" || n === "NO PILOT" || n === "NO_PILOT");
+            if (!isPlaceholder) {
+                realPilots.push(p);
+            } else {
+                emptyStock.push(p);
+            }
         });
-        if (!isFullyPopulated) return false;
 
-        let bands = heat.pilots.map(p => p.band).filter(b => b);
-        if (bands.length !== heat.pilots.length) return false;
+        // 2. 実在パイロット間で周波数の重複（コンフリクト）がないかチェック
+        let bands = realPilots.map(p => p.band).filter(b => b);
         let hasConflict = (new Set(bands)).size !== bands.length;
-        if (hasConflict) return false;
+        if (hasConflict) return false; // 重複がある場合は安全のため並べ替えをストップ
 
-        let originalOrder = [...heat.pilots];
-        heat.pilots.sort((a, b) => {
-            let idxA = this.availableBands.indexOf(a.band);
-            let idxB = this.availableBands.indexOf(b.band);
-            if (idxA === -1) idxA = 999;
-            if (idxB === -1) idxB = 999;
-            return idxA - idxB;
+        let newPilots = new Array(heat.pilots.length).fill(null);
+        let unplacedPilots = [];
+
+        // 3. 実在パイロットを availableBands の指定位置（1〜4枠）に配置
+        realPilots.forEach(p => {
+            let targetIdx = this.availableBands.indexOf(p.band);
+            if (targetIdx !== -1 && targetIdx < newPilots.length && newPilots[targetIdx] === null) {
+                newPilots[targetIdx] = p; // 指定周波数の枠に入れる
+            } else {
+                unplacedPilots.push(p); // 指定周波数がリストにない、または枠外の場合は保留
+            }
         });
 
+        // 4. 保留されたパイロットを空いている位置に配置
+        unplacedPilots.forEach(p => {
+            for (let i = 0; i < newPilots.length; i++) {
+                if (newPilots[i] === null) {
+                    newPilots[i] = p;
+                    break;
+                }
+            }
+        });
+
+        // 5. それでも空いている位置には EMPTY を配置（順番を崩さない）
+        for (let i = 0; i < newPilots.length; i++) {
+            if (newPilots[i] === null) {
+                if (emptyStock.length > 0) {
+                    newPilots[i] = emptyStock.shift(); // 既存のEMPTYを再利用
+                } else {
+                    newPilots[i] = { name: "EMPTY", sourceDesc: "EMPTY", band: "" }; // 足りなければ新規作成
+                }
+            }
+        }
+
+        // 6. 変更があったかチェックして更新
         let changed = false;
         for (let i = 0; i < heat.pilots.length; i++) {
-            if (heat.pilots[i] !== originalOrder[i]) changed = true;
+            if (heat.pilots[i] !== newPilots[i]) changed = true;
         }
+
+        if (changed) {
+            heat.pilots = newPilots;
+        }
+
         return changed;
     },
 
@@ -2495,6 +2577,59 @@
         container.innerHTML = html;
     },
 
+    // ⚡ 追加: 予約周波数を考慮してヒート内の配置を最適化（重複回避）するソルバー
+    optimizeHeatFrequencies: function(pilotsArray, perHeat) {
+        // パイロットが空ならそのまま返す
+        if (!pilotsArray || pilotsArray.length === 0) return pilotsArray;
+
+        // 1. 全員をシャッフル（完全なランダム性を担保）
+        let pool = [...pilotsArray].sort(() => Math.random() - 0.5);
+        let result = new Array(perHeat).fill("");
+        
+        // 2. 予約周波数を持っているパイロットを先に抽出
+        let reservedPilots = [];
+        let autoPilots = [];
+        
+        pool.forEach(p => {
+            // パイロット名から「元の名前」を抽出（例: "予選 1位 (アンDo)" -> "アンDo"）
+            let rawName = p;
+            const matchQual = p.match(/^(?:予選|シリーズ|総合)\s*\d+位\s*\((.+)\)$/);
+            if (matchQual) rawName = matchQual[1].trim();
+            
+            let band = pilotPreferredBands[rawName];
+            if (band && this.availableBands.includes(band)) {
+                reservedPilots.push({ name: p, band: band });
+            } else {
+                autoPilots.push(p);
+            }
+        });
+
+        // 3. 予約組を優先配置
+        let conflictDetected = false;
+        reservedPilots.forEach(rp => {
+            let slotIndex = this.availableBands.indexOf(rp.band);
+            if (slotIndex !== -1 && slotIndex < perHeat) {
+                if (result[slotIndex] === "") {
+                    result[slotIndex] = rp.name; // 空いていれば指定枠に入る
+                } else {
+                    conflictDetected = true; // 同じヒート内で予約が完全に被った（物理的に不可能）
+                }
+            } else {
+                autoPilots.push(rp.name); // 枠外（例えばE2がない4枠のレースなど）ならAUTOに回す
+            }
+        });
+
+        // 4. 残りの空き枠にAUTO組を流し込む
+        for (let i = 0; i < perHeat; i++) {
+            if (result[i] === "" && autoPilots.length > 0) {
+                result[i] = autoPilots.shift();
+            }
+        }
+
+        // 最終的に有効なパイロットだけを詰めて返す
+        return result.filter(p => p !== "");
+    },
+
     generateDraft: async function(append = false) {
       sysLog(`▶ Action: Generate Draft initiated (Append: ${append}).`, 'info');
       try {
@@ -2589,6 +2724,8 @@
             let roundHeats = Array.from({length: numHeats}, (_, i) => ({ name: `ROUND ${roundNum} - HEAT ${i+1}`, pilots: [] }));
             let forward = true; let hIdx = 0;
             for (let p of currentRoundPilots) { roundHeats[hIdx].pilots.push(p); if (forward) { hIdx++; if (hIdx >= numHeats) { hIdx = numHeats - 1; forward = false; } } else { hIdx--; if (hIdx < 0) { hIdx = 0; forward = true; } } }
+            // ⚡ 追加: 各ヒートの配置を最適化してからプッシュ
+            roundHeats.forEach(h => { h.pilots = TournamentManager.optimizeHeatFrequencies(h.pilots, perHeat); });
             generatedDraftHeats.push(...roundHeats);
             if (numHeats * advK >= currentRoundPilots.length) { await showCustomDialog('無限ループエラー。', false); return; }
             currentRoundPilots = []; allEliminatedInPrevRound = [];
@@ -2601,6 +2738,8 @@
         } else if (format === 'stepup') {
           let pool = qualifiedPilots.slice().reverse(); let roundNum = 1; let prevHeatNames = [];
           let firstHeatPilots = pool.splice(0, perHeat); let h1Name = `STEP-UP R${roundNum}`;
+          // ⚡ 追加: 枠に詰める前に最適化
+          firstHeatPilots = TournamentManager.optimizeHeatFrequencies(firstHeatPilots, perHeat);
           generatedDraftHeats.push({ name: h1Name, pilots: firstHeatPilots }); prevHeatNames = [h1Name]; roundNum++; let lastEliminated = [];
           while(pool.length > 0) {
             let space = perHeat - (prevHeatNames.length * advK); 
@@ -2624,6 +2763,8 @@
           let currentIndex = 0; let baseName = source === 'csv' || source === 'icons' ? '予選 HEAT' : '決定戦';
           for (let i = 0; i < numHeats; i++) {
             let size = baseSize + (i < rem ? 1 : 0); let chunk = qualifiedPilots.slice(currentIndex, currentIndex + size);
+            // ⚡ 追加: チャンクを最適化
+            chunk = TournamentManager.optimizeHeatFrequencies(chunk, perHeat);
             generatedDraftHeats.push({ name: `${baseName} ${i+1}`, pilots: chunk }); currentIndex += size;
           }
         } else if (format === 'points') {
@@ -3436,6 +3577,7 @@
           return a.timeMs - b.timeMs;
       });
       heat.results = standings; heat.status = 'COMPLETED'; 
+      OBSManager.stopRecord(); // ⚡ 追加: ヒートがCOMPLETEDになった瞬間にOBS録画を自動停止
       
       let topPilots = standings.filter(s => !s.isPlaceholder && !s.isDNF).slice(0, 2);
       if (topPilots.length > 0 && heat.round !== "DRAFT") {
@@ -3502,6 +3644,7 @@
 
            this.pendingCommand = 'start'; // ⚡ 追加: TVPへの自動スタート指令をセット
            this.setActive(heatId);
+           OBSManager.startRecord(); // ⚡ 追加: ヒートがACTIVEになった瞬間にOBS録画を自動開始
        } else if (heat.status === 'ACTIVE') { this.finishHeat(heatId); }
     },
 
