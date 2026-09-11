@@ -843,6 +843,51 @@
   </div>
 </div>
 
+<!-- ⚖️ 審議用リプレイモーダル -->
+<div id="judgeModal" class="modal-overlay" style="z-index: 4000; background: rgba(0,0,0,0.9); flex-direction: column;">
+  <div class="modal-content" style="width: 900px; max-width: 95%; background: #0a0a0a; border: 2px solid var(--neon-yellow); box-shadow: 0 0 30px rgba(252, 238, 10, 0.2);">
+    <div class="modal-header" style="border-bottom: 1px solid var(--neon-yellow); padding-bottom: 10px; margin-bottom: 15px;">
+      <h2 style="margin: 0; font-family: 'Orbitron'; font-size: 18px; color: var(--neon-yellow); text-shadow: 0 0 5px var(--neon-yellow);">
+        ⚖️ REPLAY JUDGE (審議ルーム) - <span id="judgeHeatTitle" style="color: #fff;"></span>
+      </h2>
+      <button class="mecha-btn" onclick="JudgePlayer.close()" style="border-color: var(--neon-pink); color: var(--neon-pink); font-weight: bold; padding: 4px 12px;">CLOSE [ X ]</button>
+    </div>
+    
+    <!-- ビデオプレイヤー -->
+    <div style="width: 100%; background: #000; text-align: center; margin-bottom: 15px; position: relative; border: 1px solid #333; border-radius: 4px; overflow: hidden;">
+      <video id="judgeVideoPlayer" style="width: 100%; max-height: 50vh; outline: none;" controls preload="auto"></video>
+    </div>
+
+    <!-- コントロールパネル -->
+    <div style="display: flex; gap: 8px; justify-content: center; align-items: center; background: rgba(255,255,255,0.05); padding: 12px; border: 1px solid #333; border-radius: 4px; flex-wrap: wrap;">
+      <button class="mecha-btn" onclick="JudgePlayer.skipTime(-3)">⏪ -3秒</button>
+      <button class="mecha-btn" onclick="JudgePlayer.stepFrame(-1)" title="ショートカット: [←]キー">◀ 1コマ戻る</button>
+      
+      <div style="width: 1px; height: 20px; background: #444; margin: 0 5px;"></div>
+      
+      <button class="mecha-btn" id="btnJudgeSpeed025" onclick="JudgePlayer.setSpeed(0.25)" style="color: var(--neon-pink); border-color: var(--neon-pink);">0.25x (超スロー)</button>
+      <button class="mecha-btn" id="btnJudgeSpeed05" onclick="JudgePlayer.setSpeed(0.5)" style="color: var(--neon-orange); border-color: var(--neon-orange);">0.5x (スロー)</button>
+      <button class="mecha-btn active-mode" id="btnJudgeSpeed1" onclick="JudgePlayer.setSpeed(1.0)" style="color: var(--neon-green); border-color: var(--neon-green);">1.0x (通常)</button>
+      
+      <div style="width: 1px; height: 20px; background: #444; margin: 0 5px;"></div>
+
+      <button class="mecha-btn" onclick="JudgePlayer.stepFrame(1)" title="ショートカット: [→]キー">1コマ進む ▶</button>
+      <button class="mecha-btn" onclick="JudgePlayer.skipTime(3)">+3秒 ⏩</button>
+      
+      <div style="width: 100%; height: 1px; background: #333; margin: 5px 0;"></div>
+      
+      <!-- ファイル手動選択（ブラウザのセキュリティ制約上、ファイルは手動選択します） -->
+      <label class="mecha-btn" style="cursor: pointer; border-color: #888; color: #ccc;">
+        📂 録画ファイルを開く <input type="file" id="judgeFileSelect" accept="video/mp4,video/mkv,video/webm" style="display: none;" onchange="JudgePlayer.loadSelectedFile(this)">
+      </label>
+    </div>
+
+    <div style="font-size: 11px; color: #aaa; margin-top: 10px; text-align: center; font-family: 'Share Tech Mono';">
+      💡 キーボード操作： <span style="color:var(--neon-cyan);">[ ← ] [ → ]</span> で1コマ送り / <span style="color:var(--neon-cyan);">[ Space ]</span> で再生・一時停止
+    </div>
+  </div>
+</div>
+
 <div id="lapEditModal" class="modal-overlay">
   <div class="modal-content" style="width: 700px; border-color: var(--neon-cyan);">
     <div class="modal-header">
@@ -1146,7 +1191,86 @@
       }
   };
 
-  window.addEventListener('DOMContentLoaded', () => { OBSManager.init(); });
+  // ⚡ 追加: 審議用リプレイプレイヤー制御モジュール
+  const JudgePlayer = {
+      videoEl: null,
+      
+      init: function() {
+          this.videoEl = document.getElementById('judgeVideoPlayer');
+          
+          // 左右キーでのコマ送りとスペースキーでの再生/停止
+          window.addEventListener('keydown', (e) => {
+              const modal = document.getElementById('judgeModal');
+              if (!modal || modal.style.display !== 'flex') return;
+              
+              e.stopPropagation(); // モーダル操作中は他のショートカットを無効化
+              
+              if (e.key === 'ArrowLeft') {
+                  e.preventDefault(); this.stepFrame(-1);
+              } else if (e.key === 'ArrowRight') {
+                  e.preventDefault(); this.stepFrame(1);
+              } else if (e.key === ' ' || e.key === 'Spacebar') {
+                  e.preventDefault();
+                  if (this.videoEl) {
+                      if (this.videoEl.paused) this.videoEl.play();
+                      else this.videoEl.pause();
+                  }
+              }
+          }, true);
+      },
+
+      open: function(heatName) {
+          document.getElementById('judgeHeatTitle').innerText = heatName;
+          document.getElementById('judgeModal').style.display = 'flex';
+          this.setSpeed(1.0);
+      },
+
+      close: function() {
+          if (this.videoEl) {
+              this.videoEl.pause();
+              this.videoEl.src = "";
+              this.videoEl.removeAttribute('src'); 
+              this.videoEl.load();
+          }
+          document.getElementById('judgeModal').style.display = 'none';
+          document.getElementById('judgeFileSelect').value = ""; 
+      },
+
+      setSpeed: function(rate) {
+          if (this.videoEl) {
+              this.videoEl.playbackRate = rate;
+              document.getElementById('btnJudgeSpeed025').classList.remove('active-mode');
+              document.getElementById('btnJudgeSpeed05').classList.remove('active-mode');
+              document.getElementById('btnJudgeSpeed1').classList.remove('active-mode');
+              
+              if (rate === 0.25) document.getElementById('btnJudgeSpeed025').classList.add('active-mode');
+              else if (rate === 0.5) document.getElementById('btnJudgeSpeed05').classList.add('active-mode');
+              else if (rate === 1.0) document.getElementById('btnJudgeSpeed1').classList.add('active-mode');
+          }
+      },
+
+      skipTime: function(sec) {
+          if (this.videoEl) this.videoEl.currentTime = Math.max(0, this.videoEl.currentTime + sec);
+      },
+
+      stepFrame: function(direction) {
+          if (!this.videoEl) return;
+          this.videoEl.pause();
+          const fps = 60; // 60fps想定での1コマ
+          this.videoEl.currentTime = Math.max(0, this.videoEl.currentTime + (direction * (1 / fps)));
+      },
+
+      loadSelectedFile: function(input) {
+          if (input.files && input.files[0]) {
+              const file = input.files[0];
+              this.videoEl.src = URL.createObjectURL(file);
+              this.setSpeed(1.0);
+              this.videoEl.play();
+          }
+      }
+  };
+
+  window.addEventListener('DOMContentLoaded', () => { OBSManager.init(); JudgePlayer.init(); });
 
   let gasExportUrl = 'https://script.google.com/macros/s/AKfycbwheM89lUVgh3uwngYO7KXC4jYct80sUiIsLF8_ELQrA7nakXwkYztTgh_x_9f-mI84/exec';
   
@@ -3460,13 +3584,12 @@
       return standings;
     },
 
-    // ⚡ 追加: 毎秒実行され、TVPからリザルトが書き出されたかを判定して自動確定する
-    checkAutoFinish: function() {
-        if (!this.isAutoFinishEnabled || isFirstLoad || isRecalculating) return;
+    // ⚡ 修正: ファイル出力検知とオートフィニッシュ、タイムアウト処理を1つの関数に統合
+    checkAutoFinishAndMeasurement: function() {
+        if (isFirstLoad || isRecalculating) return;
         const activeHeat = this.heats.find(h => h.status === 'ACTIVE');
         if (!activeHeat || !activeHeat.activationTime) return;
 
-        // ⚡ 1. ファイル出力を検知しての通常オートフィニッシュ
         let fileFoundAfterActivation = false;
         let hasValidPilot = false;
 
@@ -3475,52 +3598,77 @@
             if (!s.isPlaceholder) {
                 hasValidPilot = true;
                 const fName = s.sourceFileName;
-                // ⚡ TVPがヒートアクティブ後に新しいリザルトファイルを書き出したかをチェック
                 if (fName && window.latestRawData[fName] && window.latestRawData[fName]._updatedAt > activeHeat.activationTime) {
                     fileFoundAfterActivation = true;
                 }
             }
         }
 
+        // 1. TVPのファイル出力を検知した時の処理
         if (hasValidPilot && fileFoundAfterActivation) {
-            if (!activeHeat._autoFinishTriggered) {
-                activeHeat._autoFinishTriggered = true; // 重複発火を防止
-                sysLog(`Auto Finish triggered for Heat: ${activeHeat.id}`);
-                setTimeout(() => {
-                    if (activeHeat.status === 'ACTIVE') {
-                        this.finishHeat(activeHeat.id, true); // true = 確認ダイアログをスキップ
+            // まだ録画停止処理を行っていない場合
+            if (!activeHeat.measurementFinished) {
+                activeHeat.measurementFinished = true;
+                OBSManager.stopRecord(); // ⚡ OBS録画ストップ
+                sysLog(`Measurement file detected for Heat: ${activeHeat.id}. Recording stopped.`);
+                
+                // ⚡ フルオート または オートフィニッシュ がONの場合は、JUDGEせずに自動で確定へ流す
+                if (this.isAutoFinishEnabled || this.isFullAutoEnabled) {
+                    if (!activeHeat._autoFinishTriggered) {
+                        activeHeat._autoFinishTriggered = true;
+                        sysLog(`Auto Finish processing for Heat: ${activeHeat.id}`);
+                        // ファイルパース完了の猶予として1秒だけ待ってから即座にFINISH
+                        setTimeout(() => {
+                            if (activeHeat.status === 'ACTIVE') {
+                                this.finishHeat(activeHeat.id, true); 
+                            }
+                        }, 1000);
                     }
-                }, 4000);
+                } else {
+                    // 通常のマニュアル進行：UIを再描画して [ ⚖️ JUDGE ] ボタンを出現させる（寸止め）
+                    this.renderBracket(); 
+                }
             }
-            return; // ファイルが出た場合はタイムアウト判定は不要
+            return; // ファイルが出た場合はタイムアウト判定へ行かない
         }
 
-        // ⚡ 2. 時間制モード、またはリタイアによるタイムアウト強制終了
-        let targetSecs = activeHeat.targetSecs || parseInt(document.getElementById('dirTargetSecs').value, 10) || 180;
-        let targetLaps = activeHeat.targetLaps || 3;
-        
-        // ⚡ フルオート時、または時間制(Target Lapsが99以上)の場合は設定時間+5秒でTVPを強制停止
-        let isForceStopEnabled = this.isFullAutoEnabled || (targetLaps >= 99);
-        let extraWait = isForceStopEnabled ? 5 : 35;
-        let timeoutMs = (targetSecs + extraWait) * 1000; 
-        
-        if (Date.now() - activeHeat.activationTime > timeoutMs) {
-            if (!activeHeat._autoFinishTriggered) {
-                activeHeat._autoFinishTriggered = true;
-                sysLog(`Timeout reached. Auto Finish triggered for Heat: ${activeHeat.id}`);
-                
-                // ⚡ フルオート時または時間制時は、TVPに強制ストップ指令を放ちリザルトファイルを吐き出させる
-                if (isForceStopEnabled) {
-                    this.sendTVPCommand('stop');
-                }
-                
-                // ファイル出力と読み込みの猶予を3秒間作ってから、NRD側も強制フィニッシュ
-                setTimeout(() => {
-                    if (activeHeat.status === 'ACTIVE') {
-                        this.finishHeat(activeHeat.id, true); 
+        // 2. タイムアウト強制終了処理（オート機能ON時のみ）
+        if (this.isAutoFinishEnabled || this.isFullAutoEnabled) {
+            let targetSecs = activeHeat.targetSecs || parseInt(document.getElementById('dirTargetSecs').value, 10) || 180;
+            let targetLaps = activeHeat.targetLaps || 3;
+            
+            let isForceStopEnabled = this.isFullAutoEnabled || (targetLaps >= 99);
+            let extraWait = isForceStopEnabled ? 5 : 35;
+            let timeoutMs = (targetSecs + extraWait) * 1000; 
+            
+            if (Date.now() - activeHeat.activationTime > timeoutMs) {
+                if (!activeHeat._autoFinishTriggered) {
+                    activeHeat._autoFinishTriggered = true;
+                    sysLog(`Timeout reached. Auto Finish triggered for Heat: ${activeHeat.id}`);
+                    
+                    if (isForceStopEnabled) {
+                        this.sendTVPCommand('stop');
                     }
-                }, 3000);
+                    
+                    setTimeout(() => {
+                        if (activeHeat.status === 'ACTIVE') {
+                            this.finishHeat(activeHeat.id, true); 
+                        }
+                    }, 3000);
+                }
             }
+        }
+    },
+
+    // ⚡ 追加: 手動でSTOPボタンを押した際の処理
+    manualStopMeasurement: function(heatId) {
+        this.sendTVPCommand('stop');
+        const heat = this.heats.find(h => h.id === heatId);
+        if (heat && !heat.measurementFinished) {
+            heat.measurementFinished = true;
+            OBSManager.stopRecord(); // ⚡ OBS録画ストップ
+            sysLog(`Manual Stop. Recording stopped for Heat: ${heat.id}.`);
+            this.renderBracket();
         }
     },
 
@@ -3906,8 +4054,12 @@
                actionBtnHtml += `<button class="mecha-btn" style="margin-left:8px; font-size:10px;" onclick="TournamentManager.skipHeat('${heat.id}')">⏭ SKIP</button>`;
            }
         } else if (heat.status === 'ACTIVE') { 
-           // ⚡ 修正: FINISH HEATの前に、TVPを遠隔で止めるためのストップボタンを新設
-           actionBtnHtml = `<button class="mecha-btn" style="border-color:var(--neon-pink); color:var(--neon-pink); margin-right:8px;" onclick="TournamentManager.sendTVPCommand('stop')">🛑 STOP TVP (計測終了)</button>`;
+           // ⚡ 修正: 録画停止前(計測中)はSTOP、ファイル出力後(計測終了)はJUDGEを出す
+           if (!heat.measurementFinished) {
+               actionBtnHtml = `<button class="mecha-btn" style="border-color:var(--neon-pink); color:var(--neon-pink); margin-right:8px;" onclick="TournamentManager.manualStopMeasurement('${heat.id}')">🛑 STOP TVP (計測終了)</button>`;
+           } else {
+               actionBtnHtml = `<button class="mecha-btn" style="border-color:var(--neon-yellow); color:var(--neon-yellow); font-size:10px; font-weight:bold; margin-right:8px;" onclick="JudgePlayer.open('${heat.name}')">⚖️ JUDGE (検証)</button>`;
+           }
            actionBtnHtml += `<button class="mecha-btn btn-vj" onclick="TournamentManager.toggleHeatState('${heat.id}')">■ FINISH HEAT</button>`; 
            // ⚡ ACTIVE状態にもスキップボタンを追加
            actionBtnHtml += `<button class="mecha-btn" style="margin-left:8px; font-size:10px;" onclick="TournamentManager.skipHeat('${heat.id}')">⏭ SKIP</button>`;
@@ -4788,8 +4940,9 @@
     document.getElementById('realtimeClock').innerText = `${y}-${m}-${d} ${h}:${min}:${s}`;
     
     // ⚡ 修正: 毎秒確実にオートフィニッシュの条件を満たしていないかチェックする
-    if (typeof TournamentManager !== 'undefined' && TournamentManager.checkAutoFinish) {
-        TournamentManager.checkAutoFinish();
+    if (typeof TournamentManager !== 'undefined') {
+        // ⚡ 統合版の監視エンジンを呼び出す
+        if (TournamentManager.checkAutoFinishAndMeasurement) TournamentManager.checkAutoFinishAndMeasurement();
     }
   }
   setInterval(updateClock, 1000); updateClock();
