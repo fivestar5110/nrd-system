@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>N.R.D  v32.1</title>
+  <title>N.R.D  v33.1</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- ⚡ 追加: OBS WebSocket 通信ライブラリ -->
@@ -471,15 +471,63 @@
   <div class="top-header">
     <div style="display:flex; flex-direction:column;">
       <h1><span id="mainTitle">WTW SHIZUOKA result</span></h1>
-      <div class="system-credit">Powered by N.R.D. (Nageppanashi Race Director) v32.1</div>
+      <div class="system-credit">Powered by N.R.D. (Nageppanashi Race Director) v33.1</div>
     </div>
     <div id="realtimeClock" class="clock-display">--:--:--</div>
   </div>
 
-  <div id="initPanel">
-    <div id="initMessage">リザルトファイルの出力先フォルダを選択してシステムを起動してください。<br><span style="font-size: 12px; color: var(--neon-cyan);">※このフォルダにリカバリーデータが自動保存されます</span></div>
-    <button id="btnSelectNewDir" class="mecha-btn btn-action" style="padding:15px 30px; font-size:16px;">[ フォルダを選択 ]</button>
-    <button id="btnResumeDir" class="mecha-btn btn-action" style="display: none; margin-left: 10px; padding:15px 30px; font-size:16px;">[ 前回フォルダで再開: <span></span> ]</button>
+  <div id="initPanel" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:50px 20px; background:rgba(5,10,15,0.85); border:1px solid var(--neon-cyan); box-shadow:0 0 50px rgba(0,243,255,0.1); margin-bottom:20px; border-radius:8px; position:relative; overflow:hidden;">
+    <h2 style="font-family:'Orbitron'; color:var(--neon-cyan); margin:0 0 5px 0; font-size:28px; letter-spacing:4px; text-shadow:0 0 15px var(--neon-cyan);">N.R.D SYSTEM BOOT SEQUENCE</h2>
+    <div style="font-size:11px; color:#888; letter-spacing:2px; margin-bottom:30px;">[ INITIALIZING DIRECTORY CONNECTIONS ]</div>
+    
+    <!-- ⚡ 追加: QUICK BOOT (一括再開) ボタン -->
+    <div id="quickBootWrapper" style="display:none; width:100%; max-width:600px; margin-bottom:20px;">
+      <button id="btnMasterResume" class="mecha-btn btn-action" style="width:100%; padding:15px; font-size:16px; font-weight:bold; letter-spacing:2px; border-color:var(--neon-green); color:var(--neon-green); box-shadow:0 0 20px rgba(0,255,0,0.2), inset 0 0 10px rgba(0,255,0,0.1);">
+        [ 🚀 QUICK BOOT : ALL SYSTEMS RE-LINK ]
+      </button>
+      <div style="font-size:10px; color:#aaa; margin-top:8px; text-align:center;">※前回のセッションで接続したすべてのフォルダ権限を一括で復旧させます。</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:15px; width:100%; max-width:600px; margin-bottom:40px;">
+      <!-- 1. リザルトフォルダ -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.6); border:1px solid #333; padding:10px 15px; border-radius:4px; border-left:3px solid var(--neon-pink);">
+        <div>
+          <div style="font-weight:bold; color:var(--neon-pink); font-size:14px; letter-spacing:1px;">1. CORE DATA SOURCE [TVP RESULTS]</div>
+          <div style="font-size:10px; color:#aaa; margin-top:2px;" id="bootStatus_data">STATUS: OFFLINE</div>
+        </div>
+        <button id="btnSelectNewDir" class="mecha-btn" style="border-color:var(--neon-pink); color:var(--neon-pink);">CONNECT</button>
+      </div>
+      
+      <!-- 2. OBSリプレイフォルダ -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.6); border:1px solid #333; padding:10px 15px; border-radius:4px; border-left:3px solid var(--neon-yellow);">
+        <div>
+          <div style="font-weight:bold; color:var(--neon-yellow); font-size:14px; letter-spacing:1px;">2. REPLAY SYSTEM [OBS VIDEO]</div>
+          <div style="font-size:10px; color:#aaa; margin-top:2px;" id="bootStatus_replay">STATUS: OFFLINE</div>
+        </div>
+        <button id="btnSelectReplayDir" class="mecha-btn" style="border-color:var(--neon-yellow); color:var(--neon-yellow);">CONNECT</button>
+      </div>
+      
+      <!-- 3. アイコンフォルダ -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.6); border:1px solid #333; padding:10px 15px; border-radius:4px; border-left:3px solid var(--neon-cyan);">
+        <div>
+          <div style="font-weight:bold; color:var(--neon-cyan); font-size:14px; letter-spacing:1px;">3. VISUAL ASSETS [PILOT ICONS]</div>
+          <div style="font-size:10px; color:#aaa; margin-top:2px;" id="bootStatus_icon">STATUS: OFFLINE</div>
+        </div>
+        <button id="btnInitIconDir" class="mecha-btn" style="border-color:var(--neon-cyan); color:var(--neon-cyan);">CONNECT</button>
+      </div>
+      
+      <!-- 4. BGMフォルダ -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.6); border:1px solid #333; padding:10px 15px; border-radius:4px; border-left:3px solid var(--neon-orange);">
+        <div>
+          <div style="font-weight:bold; color:var(--neon-orange); font-size:14px; letter-spacing:1px;">4. AUDIO ENGINE [BGM PLAYLIST]</div>
+          <div style="font-size:10px; color:#aaa; margin-top:2px;" id="bootStatus_bgm">STATUS: OFFLINE</div>
+        </div>
+        <button id="btnInitBgmDir" class="mecha-btn" style="border-color:var(--neon-orange); color:var(--neon-orange);">CONNECT</button>
+      </div>
+    </div>
+    
+    <button id="btnSystemBoot" class="mecha-btn btn-action" style="padding:20px 60px; font-size:24px; font-weight:900; letter-spacing:6px; border-color:#333; color:#555; pointer-events:none; transition:all 0.3s ease;">[ ⚡ IGNITION ⚡ ]</button>
+    <div style="font-size:10px; color:#666; margin-top:10px;">※CORE DATA SOURCEが接続されるとシステムを起動できます。</div>
   </div>
 
   <div id="mainUI" style="display: none;">
@@ -1191,38 +1239,63 @@
       }
   };
 
-  // ⚡ 追加: 審議用リプレイプレイヤー制御モジュール
+  // ⚡ 修正: 完全自動読み込み対応版 リプレイプレイヤー
   const JudgePlayer = {
       videoEl: null,
       
       init: function() {
           this.videoEl = document.getElementById('judgeVideoPlayer');
           
-          // 左右キーでのコマ送りとスペースキーでの再生/停止
           window.addEventListener('keydown', (e) => {
               const modal = document.getElementById('judgeModal');
               if (!modal || modal.style.display !== 'flex') return;
-              
-              e.stopPropagation(); // モーダル操作中は他のショートカットを無効化
-              
-              if (e.key === 'ArrowLeft') {
-                  e.preventDefault(); this.stepFrame(-1);
-              } else if (e.key === 'ArrowRight') {
-                  e.preventDefault(); this.stepFrame(1);
-              } else if (e.key === ' ' || e.key === 'Spacebar') {
+              e.stopPropagation();
+              if (e.key === 'ArrowLeft') { e.preventDefault(); this.stepFrame(-1); } 
+              else if (e.key === 'ArrowRight') { e.preventDefault(); this.stepFrame(1); } 
+              else if (e.key === ' ' || e.key === 'Spacebar') {
                   e.preventDefault();
-                  if (this.videoEl) {
-                      if (this.videoEl.paused) this.videoEl.play();
-                      else this.videoEl.pause();
-                  }
+                  if (this.videoEl) { if (this.videoEl.paused) this.videoEl.play(); else this.videoEl.pause(); }
               }
           }, true);
       },
 
-      open: function(heatName) {
+      open: async function(heatName) {
           document.getElementById('judgeHeatTitle').innerText = heatName;
           document.getElementById('judgeModal').style.display = 'flex';
           this.setSpeed(1.0);
+          
+          // ⚡ 録画フォルダ(replayDirHandle)が設定されていれば、最新の動画を自動で引っ張ってくる
+          if (replayDirHandle) {
+              try {
+                  sysLog('Searching for latest replay video...', 'info');
+                  let latestFile = null;
+                  let latestTime = 0;
+                  
+                  // フォルダ内のファイルを総ざらいし、更新日時が最も新しい動画ファイルを見つける
+                  for await (const entry of replayDirHandle.values()) {
+                      if (entry.kind === 'file') {
+                          const name = entry.name.toLowerCase();
+                          if (name.endsWith('.mp4') || name.endsWith('.mkv') || name.endsWith('.webm')) {
+                              const file = await entry.getFile();
+                              if (file.lastModified > latestTime) {
+                                  latestTime = file.lastModified;
+                                  latestFile = file;
+                              }
+                          }
+                      }
+                  }
+                  
+                  if (latestFile) {
+                      sysLog(`Latest Replay Found: ${latestFile.name}`, 'info');
+                      this.videoEl.src = URL.createObjectURL(latestFile);
+                      this.videoEl.play();
+                  } else {
+                      sysLog('No video files found in the replay directory.', 'warn');
+                  }
+              } catch (e) {
+                  sysLog(`Replay Load Error: ${e.message}`, 'error');
+              }
+          }
       },
 
       close: function() {
@@ -1242,24 +1315,19 @@
               document.getElementById('btnJudgeSpeed025').classList.remove('active-mode');
               document.getElementById('btnJudgeSpeed05').classList.remove('active-mode');
               document.getElementById('btnJudgeSpeed1').classList.remove('active-mode');
-              
               if (rate === 0.25) document.getElementById('btnJudgeSpeed025').classList.add('active-mode');
               else if (rate === 0.5) document.getElementById('btnJudgeSpeed05').classList.add('active-mode');
               else if (rate === 1.0) document.getElementById('btnJudgeSpeed1').classList.add('active-mode');
           }
       },
 
-      skipTime: function(sec) {
-          if (this.videoEl) this.videoEl.currentTime = Math.max(0, this.videoEl.currentTime + sec);
-      },
-
+      skipTime: function(sec) { if (this.videoEl) this.videoEl.currentTime = Math.max(0, this.videoEl.currentTime + sec); },
       stepFrame: function(direction) {
           if (!this.videoEl) return;
           this.videoEl.pause();
-          const fps = 60; // 60fps想定での1コマ
+          const fps = 60;
           this.videoEl.currentTime = Math.max(0, this.videoEl.currentTime + (direction * (1 / fps)));
       },
-
       loadSelectedFile: function(input) {
           if (input.files && input.files[0]) {
               const file = input.files[0];
@@ -1274,7 +1342,7 @@
 
   let gasExportUrl = 'https://script.google.com/macros/s/AKfycbwheM89lUVgh3uwngYO7KXC4jYct80sUiIsLF8_ELQrA7nakXwkYztTgh_x_9f-mI84/exec';
   
-  let directoryHandle, iconDirHandle, bgmHandle;
+  let directoryHandle, iconDirHandle, bgmHandle, replayDirHandle; // ⚡ 追加: replayDirHandle
   let processedFiles = new Set();
   
   let dataByDate_Best = {}, dataByDate_Race = {}; 
@@ -3220,8 +3288,10 @@
     publishDraft: async function() {
         if(this.draftHeats.length === 0) { await showCustomDialog("ドラフトが空です。", false); return; }
         if(await showCustomDialog("このドラフト内容でトーナメントをパブリッシュしますか？\n（進行中のデータはすべて上書きされます）", true)) {
-            this.heats = []; this.globalHeatCounter = 1; let targetLapsVal = parseInt(document.getElementById('dirTargetLaps').value, 10) || 3;
-            const perHeat = parseInt(document.getElementById('dirPerHeat').value, 10) || 4; // ⚡ 1ヒートの定員人数を取得
+            this.heats = []; this.globalHeatCounter = 1; 
+            let targetLapsVal = parseInt(document.getElementById('dirTargetLaps').value, 10) || 3;
+            let targetSecsVal = parseInt(document.getElementById('dirTargetSecs').value, 10) || 180; // ⚡ 追加: 制限時間を取得
+            const perHeat = parseInt(document.getElementById('dirPerHeat').value, 10) || 4; 
 
             this.draftHeats.forEach(dh => {
                 let mappedPilots = dh.pilots.filter(p => p !== "").map(p => {
@@ -3233,15 +3303,15 @@
                     return pilotData;
                 });
 
-                // ⚡ 修正: 指定された定員（通常4人）に満たない場合、足りない分をEMPTY枠で自動パディングする
                 while (mappedPilots.length < perHeat) {
                     mappedPilots.push({ name: "EMPTY", sourceDesc: "EMPTY" });
                 }
 
-                this.heats.push({ id: `H${this.globalHeatCounter++}`, round: "DRAFT", name: dh.name, pilots: mappedPilots, targetLaps: targetLapsVal, status: "WAITING", results: [], activationTime: null });
+                // ⚡ 修正: targetSecs をヒートのデータ構造に含める
+                this.heats.push({ id: `H${this.globalHeatCounter++}`, round: "DRAFT", name: dh.name, pilots: mappedPilots, targetLaps: targetLapsVal, targetSecs: targetSecsVal, status: "WAITING", results: [], activationTime: null });
             });
             document.getElementById('directorModal').style.display = 'none'; document.getElementById('btnViewBracket').click();
-            this.renderBracket(); this.autoSave('Bracket Published'); sysLog(`Tournament Published with Target Laps: ${targetLapsVal}`);
+            this.renderBracket(); this.autoSave('Bracket Published'); sysLog(`Tournament Published (Laps: ${targetLapsVal}, Secs: ${targetSecsVal})`);
         }
     },
 
@@ -3254,7 +3324,8 @@
         
         if(await showCustomDialog("現在の進行中ブラケット（過去の成績・OVERALLランキング）を維持したまま、\nこのドラフト内容を「おかわりレース」として末尾に継ぎ足しますか？", true)) {
             let targetLapsVal = parseInt(document.getElementById('dirTargetLaps').value, 10) || 3;
-            const perHeat = parseInt(document.getElementById('dirPerHeat').value, 10) || 4; // ⚡ 1ヒートの定員人数を取得
+            let targetSecsVal = parseInt(document.getElementById('dirTargetSecs').value, 10) || 180; // ⚡ 追加: 制限時間を取得
+            const perHeat = parseInt(document.getElementById('dirPerHeat').value, 10) || 4; 
 
             this.draftHeats.forEach(dh => {
                 let mappedPilots = dh.pilots.filter(p => p !== "").map(p => {
@@ -3266,13 +3337,12 @@
                     return pilotData;
                 });
                 
-                // ⚡ 修正: 指定された定員（通常4人）に満たない場合、足りない分をEMPTY枠で自動パディングする
                 while (mappedPilots.length < perHeat) {
                     mappedPilots.push({ name: "EMPTY", sourceDesc: "EMPTY" });
                 }
 
-                // ⚡ 既存の this.heats を初期化せずに、そのまま push して追加する
-                this.heats.push({ id: `H${this.globalHeatCounter++}`, round: "DRAFT", name: dh.name, pilots: mappedPilots, targetLaps: targetLapsVal, status: "WAITING", results: [], activationTime: null });
+                // ⚡ 修正: targetSecs をヒートのデータ構造に含める
+                this.heats.push({ id: `H${this.globalHeatCounter++}`, round: "DRAFT", name: dh.name, pilots: mappedPilots, targetLaps: targetLapsVal, targetSecs: targetSecsVal, status: "WAITING", results: [], activationTime: null });
             });
             
             document.getElementById('directorModal').style.display = 'none'; 
@@ -3280,7 +3350,7 @@
             
             this.renderBracket(); 
             this.autoSave('Bracket Appended (Okawari)'); 
-            sysLog(`Tournament Appended with Target Laps: ${targetLapsVal}`);
+            sysLog(`Tournament Appended (Laps: ${targetLapsVal}, Secs: ${targetSecsVal})`);
         }
     },
 
@@ -3612,7 +3682,7 @@
                 OBSManager.stopRecord(); // ⚡ OBS録画ストップ
                 sysLog(`Measurement file detected for Heat: ${activeHeat.id}. Recording stopped.`);
                 
-                // ⚡ フルオート または オートフィニッシュ がONの場合は、JUDGEせずに自動で確定へ流す
+                // ⚡ 修正: フルオート または オートフィニッシュ がONの場合は、JUDGEせずに自動で確定(FINISH HEAT)へ流す
                 if (this.isAutoFinishEnabled || this.isFullAutoEnabled) {
                     if (!activeHeat._autoFinishTriggered) {
                         activeHeat._autoFinishTriggered = true;
@@ -3662,13 +3732,13 @@
 
     // ⚡ 追加: 手動でSTOPボタンを押した際の処理
     manualStopMeasurement: function(heatId) {
-        this.sendTVPCommand('stop');
+        TournamentManager.sendTVPCommand('stop'); // ⚡ 修正: this を TournamentManager に明示的に変更
         const heat = this.heats.find(h => h.id === heatId);
         if (heat && !heat.measurementFinished) {
             heat.measurementFinished = true;
             OBSManager.stopRecord(); // ⚡ OBS録画ストップ
             sysLog(`Manual Stop. Recording stopped for Heat: ${heat.id}.`);
-            this.renderBracket();
+            TournamentManager.renderBracket(); // ⚡ 修正: ここも念のため TournamentManager に変更
         }
     },
 
@@ -4006,15 +4076,23 @@
              }
           }
 
-          // ⚡ 修正: 進行中は「LAP FIX」と「手動計測ボタン」、確定後(COMPLETED)は「RESULT STATS(閲覧専用)」ボタンを表示する
+          // ⚡ 修正: ヒートのステータスと計測状況に応じてボタンを出し分け、UIの窮屈さを解消する
           let statsBtnHtml = '';
           if (!s.isPlaceholder) {
-              if (heat.status !== 'COMPLETED') {
-                  statsBtnHtml = `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="TournamentManager.openStats('${s.sourceFileName}', '${s.displayName}', false)">🔧 LAP FIX</button>`;
-                  // ⚡ 追加: +LAP と -DEL ボタン
-                  statsBtnHtml += `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; border-color:var(--neon-green); color:var(--neon-green); margin-left:4px;" onclick="TournamentManager.sendTVPCommand('lap_add', ${s.originalIndex})">+ LAP</button>`;
-                  statsBtnHtml += `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; border-color:var(--neon-pink); color:var(--neon-pink); margin-left:4px;" onclick="TournamentManager.confirmLapDel(${s.originalIndex}, '${s.displayName}')">- DEL</button>`;
-              } else {
+              if (heat.status === 'WAITING') {
+                  // WAITING時は操作不要なためボタン非表示
+                  statsBtnHtml = '';
+              } else if (heat.status === 'ACTIVE') {
+                  if (!heat.measurementFinished) {
+                      // 走行中：手動計測用の +LAP / -DEL のみ表示
+                      statsBtnHtml = `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; border-color:var(--neon-green); color:var(--neon-green);" onclick="TournamentManager.sendTVPCommand('lap_add', ${s.originalIndex})">+ LAP</button>`;
+                      statsBtnHtml += `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; border-color:var(--neon-pink); color:var(--neon-pink); margin-left:4px;" onclick="TournamentManager.confirmLapDel(${s.originalIndex}, '${s.displayName}')">- DEL</button>`;
+                  } else {
+                      // 計測終了後 (JUDGEフェーズ)：LAP FIX のみ表示
+                      statsBtnHtml = `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="TournamentManager.openStats('${s.sourceFileName}', '${s.displayName}', false)">🔧 LAP FIX</button>`;
+                  }
+              } else if (heat.status === 'COMPLETED') {
+                  // 確定後：閲覧専用の RESULT STATS のみ表示
                   statsBtnHtml = `<button class="mecha-btn" style="padding:2px 4px; font-size:8px; border-color:#888; color:#ccc;" onclick="TournamentManager.openStats('${s.sourceFileName}', '${s.displayName}', true)">📊 RESULT STATS</button>`;
               }
           }
@@ -4469,36 +4547,69 @@
       const modalLap = document.getElementById('lapEditModal'); document.getElementById('btnCloseLapModal').addEventListener('click', () => modalLap.style.display = 'none');
       const modalSeries = document.getElementById('seriesModal'); document.getElementById('btnOpenSeriesMgr').addEventListener('click', () => { SeriesManager.renderSeriesMgrModal(); modalSeries.style.display = 'flex'; }); document.getElementById('btnCloseSeriesModal').addEventListener('click', () => modalSeries.style.display = 'none');
 
-      document.getElementById('btnSelectNewDir').addEventListener('click', () => { SoundManager.initContext(); startSystem(true); });
-      document.getElementById('btnChangeDir').addEventListener('click', () => { document.getElementById('settingsModal').style.display = 'none'; selectDirectory(); });
-      
-      document.getElementById('btnResumeDir').addEventListener('click', async () => { 
+      // ⚡ 追加: モジュールの接続完了を視覚化し、メインボタンをアンロックする関数
+      const updateBootModuleStatus = (id, statusEl, colorVar) => {
+          document.getElementById(id).style.borderColor = colorVar;
+          document.getElementById(id).style.color = '#fff';
+          document.getElementById(id).style.background = `rgba(${colorVar === 'var(--neon-pink)' ? '255,0,60' : colorVar === 'var(--neon-yellow)' ? '252,238,10' : colorVar === 'var(--neon-cyan)' ? '0,243,255' : '255,94,0'}, 0.2)`;
+          document.getElementById(id).innerText = '[ OK ]';
+          const el = document.getElementById(statusEl);
+          if (el) { el.innerText = 'STATUS: [ OK ] CONNECTED'; el.style.color = colorVar; }
+          
+          // CORE DATA が接続されたらメインボタンをアンロック
+          if (directoryHandle) {
+              const bootBtn = document.getElementById('btnSystemBoot');
+              bootBtn.style.pointerEvents = 'auto';
+              bootBtn.style.borderColor = 'var(--neon-green)';
+              bootBtn.style.color = 'var(--neon-green)';
+              bootBtn.style.textShadow = '0 0 10px var(--neon-green)';
+              bootBtn.style.boxShadow = '0 0 20px rgba(0,255,0,0.2), inset 0 0 10px rgba(0,255,0,0.1)';
+          }
+      };
+
+      // ⚡ 追加: QUICK BOOT 一括許可処理
+      document.getElementById('btnMasterResume').addEventListener('click', async () => { 
           SoundManager.initContext(); 
           if (!directoryHandle) return; 
+          const optionsRW = { mode: 'readwrite' }; const optionsR = { mode: 'read' };
           
-          const optionsRW = { mode: 'readwrite' }; 
-          const optionsR = { mode: 'read' };
+          // 1. TVP
+          if ((await directoryHandle.queryPermission(optionsRW)) !== 'granted') { if ((await directoryHandle.requestPermission(optionsRW)) !== 'granted') return; }
+          updateBootModuleStatus('btnSelectNewDir', 'bootStatus_data', 'var(--neon-pink)');
 
-          if ((await directoryHandle.queryPermission(optionsRW)) !== 'granted') { 
-              if ((await directoryHandle.requestPermission(optionsRW)) !== 'granted') { 
-                  await showCustomDialog('データフォルダのアクセス権限が拒否されました。', false); 
-                  return; 
-              } 
-          } 
-          
-          if (iconDirHandle && (await iconDirHandle.queryPermission(optionsR)) !== 'granted') {
-              await iconDirHandle.requestPermission(optionsR).catch(e => console.warn("Icon perm denied"));
+          // 2. OBS REPLAY
+          if (replayDirHandle) {
+              if ((await replayDirHandle.queryPermission(optionsR)) !== 'granted') { await replayDirHandle.requestPermission(optionsR).catch(e=>{}); }
+              if ((await replayDirHandle.queryPermission(optionsR)) === 'granted') updateBootModuleStatus('btnSelectReplayDir', 'bootStatus_replay', 'var(--neon-yellow)');
           }
 
-          if (bgmHandle && (await bgmHandle.queryPermission(optionsR)) !== 'granted') {
-              await bgmHandle.requestPermission(optionsR).catch(e => console.warn("BGM perm denied"));
+          // 3. ICONS
+          if (iconDirHandle) {
+              if ((await iconDirHandle.queryPermission(optionsR)) !== 'granted') { await iconDirHandle.requestPermission(optionsR).catch(e=>{}); }
+              if ((await iconDirHandle.queryPermission(optionsR)) === 'granted') updateBootModuleStatus('btnInitIconDir', 'bootStatus_icon', 'var(--neon-cyan)');
           }
 
-          startSystem(false); 
+          // 4. BGM
+          if (bgmHandle) {
+              if ((await bgmHandle.queryPermission(optionsR)) !== 'granted') { await bgmHandle.requestPermission(optionsR).catch(e=>{}); }
+              if ((await bgmHandle.queryPermission(optionsR)) === 'granted') updateBootModuleStatus('btnInitBgmDir', 'bootStatus_bgm', 'var(--neon-orange)');
+          }
+          sysLog('Quick Boot Sequence Completed.');
       });
+
+      // 個別接続ボタン
+      document.getElementById('btnSelectNewDir').addEventListener('click', async () => { SoundManager.initContext(); try { directoryHandle = await window.showDirectoryPicker(); await saveSetting('dirHandle', directoryHandle); updateBootModuleStatus('btnSelectNewDir', 'bootStatus_data', 'var(--neon-pink)'); } catch (e) {} });
+      document.getElementById('btnSelectReplayDir').addEventListener('click', async () => { try { replayDirHandle = await window.showDirectoryPicker(); await saveSetting('replayDirHandle', replayDirHandle); updateBootModuleStatus('btnSelectReplayDir', 'bootStatus_replay', 'var(--neon-yellow)'); } catch (e) {} });
+      document.getElementById('btnInitIconDir').addEventListener('click', async () => { try { iconDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' }); await saveSetting('iconDirHandle', iconDirHandle); updateBootModuleStatus('btnInitIconDir', 'bootStatus_icon', 'var(--neon-cyan)'); } catch (e) {} });
+      document.getElementById('btnInitBgmDir').addEventListener('click', async () => { try { bgmHandle = await window.showDirectoryPicker(); await saveSetting('bgmDirHandle', bgmHandle); updateBootModuleStatus('btnInitBgmDir', 'bootStatus_bgm', 'var(--neon-orange)'); } catch (e) {} });
       
-      document.getElementById('btnChangeIconDir').addEventListener('click', async () => { try { iconDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' }); await saveSetting('iconDirHandle', iconDirHandle); document.getElementById('currentIconDirName').innerText = `現在: ${iconDirHandle.name}`; await buildIconCache(); updateUI(); } catch (e) { console.error("Icon Directory selection cancelled or permission denied."); } });
-      document.getElementById('btnChangeBgmDir').addEventListener('click', async () => { try { bgmHandle = await window.showDirectoryPicker(); await saveSetting('bgmDirHandle', bgmHandle); document.getElementById('currentBgmDirName').innerText = `現在: ${bgmHandle.name}`; await buildBgmPlaylist(); } catch (e) { console.error("BGM Directory selection cancelled."); } });
+      // メインのIGNITIONボタン
+      document.getElementById('btnSystemBoot').addEventListener('click', () => { startSystem(false); });
+
+      // メインUI内からの設定変更
+      document.getElementById('btnChangeDir').addEventListener('click', async () => { document.getElementById('settingsModal').style.display = 'none'; try { directoryHandle = await window.showDirectoryPicker(); await saveSetting('dirHandle', directoryHandle); startSystem(true); } catch (e) {} });
+      document.getElementById('btnChangeIconDir').addEventListener('click', async () => { try { iconDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' }); await saveSetting('iconDirHandle', iconDirHandle); document.getElementById('currentIconDirName').innerText = `現在: ${iconDirHandle.name}`; await buildIconCache(); updateUI(); } catch (e) {} });
+      document.getElementById('btnChangeBgmDir').addEventListener('click', async () => { try { bgmHandle = await window.showDirectoryPicker(); await saveSetting('bgmDirHandle', bgmHandle); document.getElementById('currentBgmDirName').innerText = `現在: ${bgmHandle.name}`; await buildBgmPlaylist(); } catch (e) {} });
       
       // ⚡ 修正: データ送信先(GAS)と案内用(Spreadsheet)の処理を分離
       const gasUrlInput = document.getElementById('gasUrlInput');
@@ -4863,8 +4974,6 @@
       
       const storedHandle = await loadSetting('dirHandle');
       if (storedHandle) { 
-        document.getElementById('btnResumeDir').style.display = 'inline-block'; 
-        document.getElementById('btnResumeDir').querySelector('span').innerText = storedHandle.name; 
         document.getElementById('currentDirName').innerText = `現在: ${storedHandle.name}`; 
         directoryHandle = storedHandle; 
       }
@@ -4916,12 +5025,36 @@
     }
 
     try {
+      // ⚡ 起動画面の QUICK BOOT ボタンを表示する処理
+      if (directoryHandle) {
+          document.getElementById('quickBootWrapper').style.display = 'block';
+          document.getElementById('btnSelectNewDir').innerText = "LINKED";
+          document.getElementById('bootStatus_data').innerText = `STATUS: WAITING PERMISSION (${directoryHandle.name})`;
+      }
+
+      const storedReplayHandle = await loadSetting('replayDirHandle');
+      if (storedReplayHandle) { 
+          replayDirHandle = storedReplayHandle; 
+          document.getElementById('btnSelectReplayDir').innerText = "LINKED";
+          document.getElementById('bootStatus_replay').innerText = `STATUS: WAITING PERMISSION (${replayDirHandle.name})`;
+      }
+
       const storedBgmHandle = await loadSetting('bgmDirHandle');
-      if (storedBgmHandle) { bgmHandle = storedBgmHandle; document.getElementById('currentBgmDirName').innerText = `現在: ${bgmHandle.name}`; }
+      if (storedBgmHandle) { 
+          bgmHandle = storedBgmHandle; 
+          document.getElementById('currentBgmDirName').innerText = `現在: ${bgmHandle.name}`; 
+          document.getElementById('btnInitBgmDir').innerText = "LINKED";
+          document.getElementById('bootStatus_bgm').innerText = `STATUS: WAITING PERMISSION (${bgmHandle.name})`;
+      }
 
       const storedIconHandle = await loadSetting('iconDirHandle');
-      if (storedIconHandle) { iconDirHandle = storedIconHandle; document.getElementById('currentIconDirName').innerText = `現在: ${iconDirHandle.name}`; }
-      sysLog('BGM/Icon Handles Restored.');
+      if (storedIconHandle) { 
+          iconDirHandle = storedIconHandle; 
+          document.getElementById('currentIconDirName').innerText = `現在: ${iconDirHandle.name}`; 
+          document.getElementById('btnInitIconDir').innerText = "LINKED";
+          document.getElementById('bootStatus_icon').innerText = `STATUS: WAITING PERMISSION (${iconDirHandle.name})`;
+      }
+      sysLog('Directory Handles Restored from DB.');
     } catch(e) {
       sysLog(`Handles Restore Error: ${e.message}`, 'warn');
     }
