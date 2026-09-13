@@ -218,6 +218,11 @@
     #recordEffect.show { animation: flashRecord 4.0s ease-out forwards; }
     @keyframes flashRecord { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); filter: blur(10px); } 10% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); filter: blur(0px); } 15% { opacity: 0.9; transform: translate(-50%, -50%) scale(0.95); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0px); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); filter: blur(20px); } }
     
+    /* ⚡ 追加: 控えめなRACE MOMENT用通知エフェクト */
+    #momentEffect { position: fixed; top: 15%; left: 50%; transform: translate(-50%, 0); font-size: clamp(16px, 2vw, 24px); color: var(--neon-yellow); font-family: 'Orbitron', sans-serif; font-weight: bold; text-shadow: 0 0 10px #000, 0 0 15px var(--neon-yellow); text-align: center; z-index: 9998; pointer-events: none; opacity: 0; white-space: pre-wrap; line-height: 1.3; background: rgba(5, 10, 15, 0.85); padding: 12px 30px; border-radius: 6px; border: 1px solid var(--neon-yellow); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    #momentEffect.show { animation: popMoment 4.0s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    @keyframes popMoment { 0% { opacity: 0; transform: translate(-50%, -20px) scale(0.8); } 10% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 15% { transform: translate(-50%, 0) scale(1); } 85% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, 20px) scale(0.9); filter: blur(5px); } }
+
     .btn-delete { padding: 3px 6px; font-size: 12px; border-color: var(--neon-pink); color: var(--neon-pink); cursor: pointer; background: transparent; border-radius:2px;} .btn-delete:hover { background: var(--neon-pink); color: #000; box-shadow: 0 0 10px var(--neon-pink); }
     .btn-edit-laps { padding: 3px 6px; font-size: 12px; border-color: var(--neon-cyan); color: var(--neon-cyan); cursor: pointer; background: transparent; margin-right: 4px; border-radius:2px;} .btn-edit-laps:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 10px var(--neon-cyan); }
     /* ⚡ 修正: 文字依存を廃止し、カメラ枠のインデックス（1=赤, 2=緑...）で色を割り当てる汎用設計 */
@@ -351,6 +356,13 @@
   <div id="winnerText" style="font-family:'Orbitron'; font-size:clamp(50px, 8vw, 100px); color:var(--neon-yellow); text-shadow:0 0 40px var(--neon-yellow); text-align:center; animation: winner-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;"></div>
 </div>
 
+<!-- ⚡ 追加: ド派手なハイライト（リプレイ）再生用オーバーレイ -->
+<div id="highlightOverlay" class="modal-overlay" style="z-index: 100000; background: rgba(0,0,0,0.95); flex-direction: column; justify-content: center; align-items: center;">
+  <div style="position:absolute; top:40px; left:50px; font-family:'Orbitron'; font-size:40px; color:var(--neon-cyan); text-shadow:0 0 20px var(--neon-cyan); font-weight:bold; animation: pulse 1s infinite alternate; z-index:100001; pointer-events:none;">🎬 RACE REPLAY</div>
+  <video id="highlightVideoPlayer" style="width: 90%; max-height: 80vh; border: 4px solid var(--neon-cyan); box-shadow: 0 0 30px rgba(0, 243, 255, 0.5); border-radius: 8px; outline: none; background: #000;" autoplay></video>
+  <button class="mecha-btn" onclick="TournamentManager.closeHighlight()" style="margin-top: 20px; font-size: 16px; padding: 10px 30px; border-color: var(--neon-pink); color: var(--neon-pink);">[ 🛑 CLOSE REPLAY ]</button>
+</div>
+
 <div id="recoveryModal" class="modal-overlay">
   <div class="modal-content" style="width: 750px; border-color: var(--neon-pink);">
     <div class="modal-header">
@@ -466,6 +478,8 @@
 </div>
 
 <div id="recordEffect">NEW COURSE RECORD!!</div>
+<!-- ⚡ 追加: 控えめな通知用要素 -->
+<div id="momentEffect"></div>
 
 <div class="container">
   <div class="top-header">
@@ -634,6 +648,11 @@
             <div class="mecha-panel" style="border-color:var(--neon-green);">
               <label style="color:var(--neon-green);">FULL AUTO:</label>
               <button id="btnToggleFullAuto" class="mecha-btn">OFF</button>
+            </div>
+            <!-- ⚡ 追加: 自動ハイライト（リプレイバッファ）のON/OFFスイッチ -->
+            <div class="mecha-panel" style="border-color:var(--neon-cyan);">
+              <label style="color:var(--neon-cyan);">AUTO REPLAY:</label>
+              <button id="btnToggleAutoReplay" class="mecha-btn">OFF</button>
             </div>
             <div class="db-search-wrapper">
               <span class="db-search-icon">🔍</span>
@@ -1204,10 +1223,10 @@
   const OBSManager = {
       obs: new OBSWebSocket(),
       isConnected: false,
+      lastHighlightMsg: "", // 直近のモーメントテキストを保持
       
       init: async function() {
           try {
-              // OBSのWebSocketサーバー (v5) に接続
               await this.obs.connect('ws://localhost:4455');
               this.isConnected = true;
               sysLog('OBS WebSocket Connected successfully.', 'info');
@@ -1217,25 +1236,45 @@
                   sysLog('OBS WebSocket Disconnected. Retrying in 5s...', 'warn');
                   setTimeout(() => this.init(), 5000);
               });
+
+              // ⚡ 修正: NRD上で再生するため、絶対パスから「ファイル名」だけを切り出して記憶する
+              this.obs.on('ReplayBufferSaved', (data) => {
+                  const savedPath = data.savedReplayPath;
+                  sysLog(`OBS Replay File Saved: ${savedPath}`, 'info');
+                  
+                  // スラッシュまたはバックスラッシュで分割してファイル名だけを取得
+                  const fileName = savedPath.split(/[/\\]/).pop();
+                  
+                  const activeHeat = TournamentManager.heats.find(h => h.status === 'ACTIVE');
+                  if (activeHeat) {
+                      if (!activeHeat.highlights) activeHeat.highlights = [];
+                      activeHeat.highlights.push({
+                          message: this.lastHighlightMsg || `HIGHLIGHT ${activeHeat.highlights.length + 1}`,
+                          fileName: fileName // ファイル名を保存
+                      });
+                      TournamentManager.renderBracket(); // UIを即座に更新
+                  }
+              });
           } catch (error) {
-              sysLog(`OBS WebSocket Connection Failed: Please ensure OBS is running.`, 'warn');
-              // 失敗しても5秒ごとにリトライし続ける（OBSを後から立ち上げても繋がるようにする泥臭い設計）
+              sysLog(`OBS WebSocket Connection Failed.`, 'warn');
               setTimeout(() => this.init(), 5000); 
           }
       },
       startRecord: async function() {
           if (!this.isConnected) return;
-          try {
-              await this.obs.call('StartRecord');
-              sysLog('OBS Recording STARTED.', 'info');
-          } catch (e) { sysLog(`OBS StartRecord Error: ${e.message}`, 'warn'); }
+          try { await this.obs.call('StartRecord'); sysLog('OBS Recording STARTED.', 'info'); } catch (e) {}
       },
       stopRecord: async function() {
           if (!this.isConnected) return;
+          try { await this.obs.call('StopRecord'); sysLog('OBS Recording STOPPED.', 'info'); } catch (e) {}
+      },
+      saveReplayBuffer: async function(msg) {
+          if (!this.isConnected) return;
           try {
-              await this.obs.call('StopRecord');
-              sysLog('OBS Recording STOPPED.', 'info');
-          } catch (e) { sysLog(`OBS StopRecord Error: ${e.message}`, 'warn'); }
+              this.lastHighlightMsg = msg; 
+              await this.obs.call('SaveReplayBuffer');
+              sysLog('🎬 OBS Replay Buffer Triggered!', 'info');
+          } catch (e) { sysLog(`OBS SaveReplayBuffer Error: ${e.message}`, 'warn'); }
       }
   };
 
@@ -2099,6 +2138,12 @@
     draftHeats: [],
     globalHeatCounter: 1,
     pendingCommand: null, // ⚡ 追加: TVPへの送信コマンド保持用
+
+    // ⚡ 追加: リアルタイムイベント監視用変数 (RACE MOMENT / AUTO REPLAY用)
+    lastLiveEventTimestamp: 0,
+    previousStandings: [],
+    isAutoReplayEnabled: false,
+    liveEventTimerId: null,
 
     // ⚡ 追加: オートタイマー管理用変数
     isAutoNextEnabled: false,
@@ -3732,13 +3777,17 @@
 
     // ⚡ 追加: 手動でSTOPボタンを押した際の処理
     manualStopMeasurement: function(heatId) {
-        TournamentManager.sendTVPCommand('stop'); // ⚡ 修正: this を TournamentManager に明示的に変更
         const heat = this.heats.find(h => h.id === heatId);
         if (heat && !heat.measurementFinished) {
             heat.measurementFinished = true;
             OBSManager.stopRecord(); // ⚡ OBS録画ストップ
             sysLog(`Manual Stop. Recording stopped for Heat: ${heat.id}.`);
-            TournamentManager.renderBracket(); // ⚡ 修正: ここも念のため TournamentManager に変更
+            
+            // ⚡ 修正: コマンドファイルが一瞬で上書きされてしまう競合バグを解消。
+            // 直接送信せず「送信予約」だけを行い、直後の renderBracket に同梱して1回で送信させる。
+            TournamentManager.pendingCommand = 'stop';
+            
+            TournamentManager.renderBracket(); 
         }
     },
 
@@ -3929,6 +3978,8 @@
 
         heat.status = 'WAITING';
         heat.results = [];
+        heat.measurementFinished = false; // ⚡ 修正: 計測終了フラグも初期状態(false)にリセットする
+        heat._autoFinishTriggered = false; // ⚡ 念のためオートフィニッシュの発火フラグもリセット
         
         // 状態を戻して再描画（上位ヒートの進出枠は同期ロジックで自動的に白紙にリセットされる）
         this.renderBracket();
@@ -4144,6 +4195,24 @@
         } else if (heat.status === 'COMPLETED') {
            // ⚡ COMPLETED状態にやり直し(REDO)ボタンを追加
            actionBtnHtml = `<button class="mecha-btn" style="border-color:var(--neon-orange); color:var(--neon-orange); font-size:10px;" onclick="TournamentManager.redoHeat('${heat.id}')">↺ REDO (やり直し)</button>`;
+           
+           // ⚡ 追加: このヒートにハイライトが存在する場合、再生用のスマートなUIを追加
+           if (heat.highlights && heat.highlights.length > 0) {
+               // ⚡ 修正: ファイル名だけをOptionのValueとしてセット
+               let highlightOptions = heat.highlights.map((hl, idx) => {
+                   return `<option value="${hl.fileName}">[${idx+1}] ${hl.message}</option>`;
+               }).join('');
+               
+               actionBtnHtml += `
+               <div style="display:inline-flex; align-items:center; margin-left:8px; border:1px solid var(--neon-cyan); border-radius:3px; background:#000;">
+                   <select id="hl_select_${heat.id}" style="background:transparent; color:var(--neon-cyan); border:none; outline:none; font-size:10px; max-width:150px; padding:2px;">
+                       ${highlightOptions}
+                   </select>
+                   <button class="mecha-btn" style="border:none; border-left:1px solid var(--neon-cyan); color:var(--neon-cyan); font-size:10px; padding:2px 8px;" onclick="TournamentManager.playHighlight(document.getElementById('hl_select_${heat.id}').value)">
+                       🎬 PLAY
+                   </button>
+               </div>`;
+           }
         }
 
         // ⚡ アコーディオン開閉ヘッダー
@@ -4300,6 +4369,161 @@
             // ファイルロック中（TVPが読み込み中）などはエラーを出さずに無視して次回に回す
             console.warn("TVP Sync skipped this frame:", e.message);
         }
+    },
+
+    // ----------------------------------------------------------
+    // ⚡ 追加: TVPのリアルタイムイベント監視とOBSハイライトトリガー
+    // ----------------------------------------------------------
+    startLiveEventMonitor: function() {
+        if(this.liveEventTimerId) clearInterval(this.liveEventTimerId);
+        this.liveEventTimerId = setInterval(() => this.checkLiveEvent(), 500); // 0.5秒間隔の超高速監視
+    },
+
+    checkLiveEvent: async function() {
+        if (!directoryHandle) return;
+        const activeHeat = this.heats.find(h => h.status === 'ACTIVE');
+        if (!activeHeat) {
+            this.previousStandings = []; // ヒート中以外は過去順位をリセット
+            return; 
+        }
+
+        try {
+            const fileHandle = await directoryHandle.getFileHandle('tvp_live_event.json');
+            const file = await fileHandle.getFile();
+            const text = await file.text();
+            if(!text) return;
+            const eventJson = JSON.parse(text);
+            
+            // タイムスタンプが新しければイベント発生とみなす
+            if (eventJson.timestamp > this.lastLiveEventTimestamp) {
+                this.lastLiveEventTimestamp = eventJson.timestamp;
+                this.processLiveEvent(eventJson, activeHeat);
+            }
+        } catch(e) {
+            // ファイル未生成などは無視
+        }
+    },
+
+    processLiveEvent: function(eventJson, activeHeat) {
+        if (eventJson.event === "lap_add") {
+            const lapData = eventJson.lapUpdate; 
+            if (!lapData) return;
+            
+            // 現在の最新ランキングを取得
+            const currentStandings = this.getRealtimeStandings(activeHeat);
+            
+            // 1. ベストラップ判定（今ヒート中のトップタイムかどうか）
+            let isFastestLap = false;
+            if (lapData.lapTimeSec > 0) {
+                let heatBest = Infinity;
+                currentStandings.forEach(s => {
+                    if(s.lapsData) {
+                        s.lapsData.forEach(l => {
+                            if(l.durationSec < heatBest) heatBest = l.durationSec;
+                        });
+                    }
+                });
+                if (lapData.lapTimeSec <= heatBest) isFastestLap = true;
+            }
+
+            // 2. オーバーテイク（順位逆転）判定
+            let overtakeMsg = "";
+            let rankNum = currentStandings.findIndex(s => s.displayName === lapData.pilot) + 1;
+
+            if (this.previousStandings.length > 0) {
+                const prevIdx = this.previousStandings.findIndex(s => s.displayName === lapData.pilot);
+                const currIdx = currentStandings.findIndex(s => s.displayName === lapData.pilot);
+                
+                // 直前の順位より上がっていればオーバーテイク！
+                if (prevIdx > currIdx && currIdx >= 0) {
+                    const passedPilot = this.previousStandings[currIdx].displayName;
+                    // EMPTYを抜いた場合は無視
+                    if (passedPilot !== "EMPTY" && passedPilot !== "No Pilot") {
+                        overtakeMsg = `${lapData.pilot} PASSED ${passedPilot}!!`;
+                    }
+                }
+            }
+            
+            // ⚡ 修正: 小数点以下2桁に丸めてフォーマットを整理
+            let formattedTime = Number(lapData.lapTimeSec).toFixed(2);
+            let momentMsg = `L${lapData.lapNum} | P${rankNum} ${lapData.pilot} | ${formattedTime}s`;
+            let isHighlight = false;
+            let effectColor = "var(--neon-yellow)";
+
+            if (isFastestLap) {
+                momentMsg = `⚡ FASTEST LAP!\n` + momentMsg;
+                isHighlight = true;
+                effectColor = "var(--neon-cyan)";
+            }
+            if (overtakeMsg) {
+                momentMsg = `🔥 OVERTAKE!\n` + overtakeMsg;
+                isHighlight = true;
+                effectColor = "var(--neon-pink)";
+            }
+            
+           // ⚡ ハイライトと判定された場合、専用のスマートなエフェクトとOBSトリガーを発動
+            if (isHighlight) {
+                triggerMomentEffect(momentMsg, effectColor); 
+                sysLog(`[RACE MOMENT] ${momentMsg.replace('\n', ' ')}`, 'info');
+                
+                if (this.isAutoReplayEnabled) {
+                    // ⚡ 修正: OBSからの返信に紐付けるため、改行を抜いたテキストを渡す
+                    OBSManager.saveReplayBuffer(momentMsg.replace('\n', ' '));
+                }
+            }
+            
+            this.previousStandings = currentStandings;
+            
+        } else if (eventJson.event === "lap_del") {
+            // ラップが取り消された場合は順位基準をリセット
+            this.previousStandings = this.getRealtimeStandings(activeHeat);
+        }
+    },
+
+    // ----------------------------------------------------------
+    // ⚡ 追加: N.R.D上でのハイライト動画（リプレイ）再生モジュール
+    // ----------------------------------------------------------
+    playHighlight: async function(fileName) {
+        if (!replayDirHandle) {
+            await showCustomDialog("OBSリプレイフォルダが接続されていません。\nシステム起動時の「CONNECT」から設定してください。", false);
+            return;
+        }
+        try {
+            // NRDが持っている権限を使って、フォルダ内から直接動画ファイルを取得
+            const fileHandle = await replayDirHandle.getFileHandle(fileName);
+            const file = await fileHandle.getFile();
+            const videoEl = document.getElementById('highlightVideoPlayer');
+            const overlay = document.getElementById('highlightOverlay');
+            
+            // 動画をセット
+            videoEl.src = URL.createObjectURL(file);
+            overlay.style.display = 'flex';
+            
+            // 音量をBGMより少し大きめに設定し、BGMを自動的に下げる（ダッキング）
+            videoEl.volume = Math.min(1.0, userBgmVolume * 1.5);
+            SoundManager.triggerDucking(); 
+            
+            // 再生開始
+            videoEl.play();
+
+            // 再生が終わったら自動で閉じる
+            videoEl.onended = () => {
+                this.closeHighlight();
+            };
+        } catch (e) {
+            sysLog(`Highlight Playback Error: ${e.message}`, 'error');
+            await showCustomDialog(`ファイルが見つかりません: ${fileName}\nOBSの保存先とNRDの接続先フォルダが一致しているか確認してください。`, false);
+        }
+    },
+
+    closeHighlight: function() {
+        const videoEl = document.getElementById('highlightVideoPlayer');
+        const overlay = document.getElementById('highlightOverlay');
+        videoEl.pause();
+        videoEl.removeAttribute('src');
+        videoEl.load();
+        overlay.style.display = 'none';
+        SoundManager.restoreDucking(); // BGMの音量を戻す
     }
   };
 
@@ -4526,6 +4750,23 @@
                   TournamentManager.isAutoFinishEnabled = true;
                   const afBtn = document.getElementById('btnToggleAutoFinish');
                   if(afBtn) { afBtn.innerText = 'ON'; afBtn.classList.add('active-mode'); afBtn.style.color = 'var(--neon-pink)'; }
+              } else {
+                  e.target.innerText = 'OFF';
+                  e.target.classList.remove('active-mode');
+                  e.target.style.color = '';
+              }
+          });
+      }
+
+      // ⚡ 追加: AUTO REPLAY ボタンのイベントリスナー
+      const btnAutoReplay = document.getElementById('btnToggleAutoReplay');
+      if (btnAutoReplay) {
+          btnAutoReplay.addEventListener('click', (e) => {
+              TournamentManager.isAutoReplayEnabled = !TournamentManager.isAutoReplayEnabled;
+              if (TournamentManager.isAutoReplayEnabled) {
+                  e.target.innerText = 'ON';
+                  e.target.classList.add('active-mode');
+                  e.target.style.color = 'var(--neon-cyan)';
               } else {
                   e.target.innerText = 'OFF';
                   e.target.classList.remove('active-mode');
@@ -5299,6 +5540,12 @@
     if(intervalId) clearInterval(intervalId); 
     intervalId = setInterval(checkDirectory, 3000); 
     checkDirectory();
+    
+    // ⚡ 追加: リアルタイムイベント監視ループ(0.5秒間隔)の起動
+    if (typeof TournamentManager !== 'undefined' && TournamentManager.startLiveEventMonitor) {
+        TournamentManager.startLiveEventMonitor();
+    }
+    
     sysLog('System is now ONLINE and monitoring.', 'info');
   }
 
@@ -5326,6 +5573,17 @@
   function triggerRecordEffect(overrideText) {
     const el = document.getElementById('recordEffect');
     el.innerText = overrideText || "NEW COURSE RECORD!!";
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+  }
+
+  // ⚡ 追加: 控えめなRACE MOMENT用エフェクト関数
+  function triggerMomentEffect(text, colorVar) {
+    const el = document.getElementById('momentEffect');
+    if (!el) return;
+    el.innerText = text;
+    el.style.color = colorVar;
+    el.style.borderColor = colorVar;
+    el.style.textShadow = `0 0 10px #000, 0 0 15px ${colorVar}`;
     el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
   }
 
