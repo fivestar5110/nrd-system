@@ -28,6 +28,38 @@
     body.theme-minimal { --bg-color: #ffffff; --panel-bg: #ffffff; --neon-cyan: #000000; --neon-pink: #666666; --neon-yellow: #000000; --neon-green: #000000; --neon-orange: #000000; --text-main: #000000; --grid-color: transparent; --rank1-text: #fff; --rank2-text: #000; --bg-image: none; --shadow-intensity: 0px; --border-intensity: 1px; --corner-display: none; --header-bg-solid: #ffffff; --th-border: #000; }
     body.theme-terminal { --bg-color: #000000; --panel-bg: #000000; --neon-cyan: #00ff00; --neon-pink: #00ff00; --neon-yellow: #00ff00; --neon-green: #00ff00; --neon-orange: #00ff00; --text-main: #00ff00; --grid-color: transparent; --rank1-text: #000; --rank2-text: #00ff00; --bg-image: none; --shadow-intensity: 0px; --border-intensity: 1px; --header-bg-solid: #000000; --th-border: #00ff00; }
     
+    /* =========================================================
+       ATC / AIR TRAFFIC CONTROL THEME (VARIABLES)
+       ========================================================= */
+    body.theme-atc {
+        --bg-color: #071014;
+        --panel-bg: rgba(8, 22, 27, 0.94);
+        --neon-cyan: #63e6e2;
+        --neon-pink: #ff5c5c;
+        --neon-yellow: #ffd166;
+        --neon-green: #67e8a5;
+        --neon-orange: #ff9f43;
+        --text-main: #d9f7f5;
+        --grid-color: rgba(99, 230, 226, 0.075);
+        --rank1-text: #06100f;
+        --rank2-text: #06100f;
+        --bg-image:
+            linear-gradient(rgba(99, 230, 226, 0.055) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(99, 230, 226, 0.055) 1px, transparent 1px),
+            radial-gradient(circle at 50% 45%, rgba(35, 150, 145, 0.13), transparent 42%);
+        --bg-size: 45px 45px, 45px 45px, 100% 100%;
+        --bg-anim: atc-radar-pulse 6s ease-in-out infinite alternate;
+        --shadow-intensity: 12px;
+        --border-intensity: 1px;
+        --corner-display: block;
+        --header-bg-solid: #0b2026;
+        --th-border: rgba(99, 230, 226, 0.35);
+    }
+    @keyframes atc-radar-pulse {
+        0% { box-shadow: inset 0 0 40px rgba(40, 210, 200, 0.04); }
+        100% { box-shadow: inset 0 0 120px rgba(40, 210, 200, 0.12); }
+    }
+
     @keyframes pulse-bg { 0% { box-shadow: inset 0 0 50px rgba(255,0,255,0.1); } 100% { box-shadow: inset 0 0 150px rgba(0,255,255,0.3); } }
 
     body { font-family: 'Share Tech Mono', monospace; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 10px; background-image: var(--bg-image); background-size: var(--bg-size); height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; animation: var(--bg-anim); position: relative; }
@@ -100,7 +132,7 @@
     @keyframes pulse-bounce { 0% { transform: scale(1); box-shadow: none; filter: brightness(1); } 10% { transform: scale(1.02); box-shadow: 0 0 30px var(--neon-cyan), inset 0 0 15px var(--neon-cyan); filter: brightness(1.3); } 40% { transform: scale(1.01); box-shadow: 0 0 15px var(--neon-cyan); filter: brightness(1.15); } 100% { transform: scale(1); box-shadow: none; filter: brightness(1); } }
     @keyframes text-glitch { 0% { opacity: 1; transform: translate(0); filter: none; } 4% { opacity: 0.8; transform: translate(-2px, 1px); filter: contrast(150%); } 8% { opacity: 0.9; transform: translate(2px, -1px); filter: contrast(120%); } 12% { opacity: 0.8; transform: translate(-1px, 2px); filter: none; } 16% { opacity: 1; transform: translate(1px, -2px); } 20% { opacity: 0.9; transform: translate(0, 0); } 24% { opacity: 1; transform: translate(0); } 100% { opacity: 1; transform: translate(0); } }
 
-    /* 2. ANALOG FLAP (動画再現版：デジタル・パタパタ掲示板) */
+    /* 2. ANALOG FLAP */
     @keyframes flap-spin {
       0%   { transform: perspective(400px) rotateX(0deg); filter: brightness(0.3); background-color: #111; color: #fff; box-shadow: inset 0 0 15px rgba(0,0,0,0.8); }
       15%  { transform: perspective(400px) rotateX(-90deg); background-color: #111; color: #fff; }
@@ -126,17 +158,14 @@
       position: relative;
       border-radius: 4px;
     }
-    
-    /* 動画の特徴である「上下フラップの境目（黒いスリット線）」を再現 */
     body.fx-flap .fx-update td::after {
       content: ''; position: absolute; top: 50%; left: 0; right: 0;
       height: 2px; background: rgba(0,0,0,0.9); box-shadow: 0 1px 2px rgba(0,0,0,0.6);
       z-index: 5; pointer-events: none; transform: translateY(-50%);
-      opacity: 0; /* デフォルトは非表示 */
+      opacity: 0;
       animation: flap-slit 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     
-    /* 左のPOS(順位)から右のTIMEへ向かって順番にディレイ発動（スリット線も同調させる） */
     body.fx-flap .fx-update td:nth-child(1), body.fx-flap .fx-update td:nth-child(1)::after { animation-delay: 0.0s; } 
     body.fx-flap .fx-update td:nth-child(2), body.fx-flap .fx-update td:nth-child(2)::after { animation-delay: 0.1s; } 
     body.fx-flap .fx-update td:nth-child(3), body.fx-flap .fx-update td:nth-child(3)::after { animation-delay: 0.2s; } 
@@ -144,18 +173,18 @@
     body.fx-flap .fx-update td:nth-child(5), body.fx-flap .fx-update td:nth-child(5)::after { animation-delay: 0.4s; } 
     body.fx-flap .fx-update td:nth-child(6), body.fx-flap .fx-update td:nth-child(6)::after { animation-delay: 0.5s; }
 
-    /* 3. NEON FLASH (シンプルな発光とフェード) */
+    /* 3. NEON FLASH */
     @keyframes neon-flash-bg { 0% { background-color: var(--neon-cyan); box-shadow: 0 0 20px var(--neon-cyan); transform: scale(1.02); } 100% { background-color: transparent; box-shadow: none; transform: scale(1); } }
     @keyframes neon-flash-text { 0% { color: #000; text-shadow: none; } 100% { color: inherit; } }
     body.fx-flash .fx-update { animation: neon-flash-bg 1.2s ease-out forwards; z-index: 100; position: relative; border-radius: 4px; }
     body.fx-flash .fx-update td { animation: neon-flash-text 1.2s ease-out forwards; }
 
-    /* 4. DIGITAL TYPEWRITER (タイピング・ワイプ) */
+    /* 4. DIGITAL TYPEWRITER */
     @keyframes type-writer-reveal { 0% { clip-path: inset(0 100% 0 0); opacity: 0.5; filter: hue-rotate(90deg); } 100% { clip-path: inset(0 0 0 0); opacity: 1; filter: hue-rotate(0deg); } }
     body.fx-type .fx-update td { animation: type-writer-reveal 0.5s cubic-bezier(0.0, 0.5, 0.5, 1.0) both; }
     body.fx-type .fx-update td:nth-child(1) { animation-delay: 0.0s; } body.fx-type .fx-update td:nth-child(2) { animation-delay: 0.1s; } body.fx-type .fx-update td:nth-child(3) { animation-delay: 0.2s; } body.fx-type .fx-update td:nth-child(4) { animation-delay: 0.3s; } body.fx-type .fx-update td:nth-child(5) { animation-delay: 0.4s; } body.fx-type .fx-update td:nth-child(6) { animation-delay: 0.5s; }
 
-    /* 5. NONE (エフェクトなし) */
+    /* 5. NONE */
     body.fx-none .fx-update { animation: none !important; box-shadow: none !important; transform: none !important; }
     body.fx-none .fx-update td { animation: none !important; }
 
@@ -183,7 +212,7 @@
     /* ショートカットキー装飾 */
     .shortcut-key { font-size: 8px; opacity: 0.6; margin-left: 4px; font-family: 'Share Tech Mono', monospace; }
 
-    input[type="range"] { -webkit-appearance: none; width: 60px; height: 4px; background: #000; border: 1px solid #222; outline: none; border-radius: 2px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
+    input[type="range"] { -webkit-appearance: none; appearance: none; width: 60px; height: 4px; background: #000; border: 1px solid #222; outline: none; border-radius: 2px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
     input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 8px; height: 14px; background: var(--neon-cyan); cursor: pointer; border-radius: 2px; box-shadow: 0 0 5px var(--neon-cyan), 0 2px 3px #000; border: 1px solid #fff; }
     
     .db-search-wrapper { position: relative; display: flex; align-items: center; }
@@ -337,9 +366,128 @@
     
     /* Winner Spotlight用エフェクト */
     @keyframes winner-pop { 0% { transform: scale(0.5); opacity: 0; filter: blur(10px); } 60% { transform: scale(1.1); opacity: 1; filter: blur(0px); } 100% { transform: scale(1); opacity: 1; filter: blur(0px); } }
-  </style>
+
+    /* ---------------------------------------------------
+       ⚡ SHOW VIEW (観客/OBS配信用画面) 専用スタイル
+       --------------------------------------------------- */
+    #showViewUI { display: none; width: 100vw; height: 100vh; background: #050505; flex-direction: column; padding: 30px; box-sizing: border-box; overflow: hidden; position: absolute; top:0; left:0; z-index: 999999; }
+    body.show-mode #showViewUI { display: flex; }
+    body.show-mode .container, body.show-mode #initPanel, body.show-mode #sysLogTerminal, body.show-mode .modal-overlay, body.show-mode #lapTriggerConsole { display: none !important; }
+    
+    .sv-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid var(--neon-cyan); padding-bottom: 15px; margin-bottom: 30px;}
+    .sv-title { font-family: 'Orbitron'; font-size: 35px; color: var(--neon-cyan); text-shadow: 0 0 20px var(--neon-cyan); letter-spacing: 4px; }
+    .sv-heat-name { font-family: 'Orbitron'; font-size: 70px; color: var(--neon-yellow); text-shadow: 0 0 30px var(--neon-yellow); font-weight: 900; line-height: 1; }
+    
+    .sv-main { display: flex; gap: 40px; flex: 1; min-height: 0; }
+    .sv-leaderboard { flex: 3; display: flex; flex-direction: column; gap: 20px; }
+    
+    .sv-pilot-card { background: linear-gradient(90deg, rgba(20,30,40,0.95), rgba(5,10,15,0.9)); border-left: 8px solid #444; padding: 20px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .sv-pilot-card.rank-1 { border-left-color: var(--neon-yellow); background: linear-gradient(90deg, rgba(252,238,10,0.15), rgba(5,10,15,0.9)); transform: scale(1.02); margin-left: 10px; }
+    .sv-pilot-card.rank-2 { border-left-color: #c0c0c0; }
+    .sv-pilot-card.rank-3 { border-left-color: #cd7f32; }
+    .sv-pilot-card.dsq { opacity: 0.4; filter: grayscale(100%); }
+    
+    .sv-gap-bar { position: absolute; bottom: 0; left: 0; height: 6px; background: var(--neon-cyan); box-shadow: 0 0 15px var(--neon-cyan); transition: width 0.5s ease-out; }
+    
+    .sv-timeline { flex: 2; background: rgba(0,243,255,0.03); border: 2px solid rgba(0,243,255,0.3); border-radius: 8px; padding: 25px; overflow: hidden; display: flex; flex-direction: column; box-shadow: inset 0 0 50px rgba(0,0,0,0.8);}
+    .sv-timeline-item { display:flex; gap:20px; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px; animation: type-writer-reveal 0.3s ease-out forwards; }
+    .sv-timeline-time { font-family:'Share Tech Mono'; opacity:0.6; width:90px; font-size: 22px; }
+    .sv-timeline-msg { font-size: 24px; font-family:'Orbitron'; flex:1; line-height: 1.3; }
+
+    /* =========================================================
+       ATC / AIR TRAFFIC CONTROL THEME (OVERRIDE STYLES)
+       ========================================================= */
+    body.theme-atc { letter-spacing: 0.4px; }
+    body.theme-atc::after { opacity: 0.16; background: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(99, 230, 226, 0.025) 50%); background-size: 100% 4px; }
+    
+    body.theme-atc .container { background: linear-gradient(180deg, rgba(10, 32, 38, 0.97), rgba(5, 17, 21, 0.97)); border-color: rgba(99, 230, 226, 0.65); box-shadow: 0 0 20px rgba(60, 220, 210, 0.08), inset 0 0 40px rgba(60, 220, 210, 0.035); }
+    body.theme-atc .container::before, body.theme-atc .container::after { width: 32px; height: 32px; border-width: 2px; opacity: 0.9; }
+    
+    body.theme-atc .top-header { border-bottom-color: rgba(99, 230, 226, 0.55); position: relative; }
+    body.theme-atc .top-header::after { content: "FLIGHT CONTROL // FPV RACE OPERATIONS"; position: absolute; left: 0; bottom: -18px; font-family: 'Share Tech Mono', monospace; font-size: 8px; letter-spacing: 2px; color: rgba(99, 230, 226, 0.45); pointer-events: none; }
+    
+    body.theme-atc h1 { color: #9cf3ef; text-shadow: 0 0 6px rgba(99, 230, 226, 0.35); letter-spacing: 3px; font-weight: 500; }
+    body.theme-atc .system-credit { color: var(--neon-green); text-shadow: 0 0 6px rgba(103, 232, 165, 0.25); letter-spacing: 2px; }
+    body.theme-atc .clock-display { color: #ffd166; text-shadow: 0 0 8px rgba(255, 209, 102, 0.25); letter-spacing: 3px; }
+    
+    body.theme-atc table { border-collapse: separate; border-spacing: 0; }
+    body.theme-atc th { color: #72ddd8; background: linear-gradient(180deg, #0d2a31, #091c21); border-bottom: 1px solid rgba(99, 230, 226, 0.35); text-shadow: 0 0 5px rgba(99, 230, 226, 0.2); letter-spacing: 1.5px; }
+    body.theme-atc td { border-bottom: 1px solid rgba(99, 230, 226, 0.09); color: #d5eeee; }
+    body.theme-atc tbody tr:hover { background: linear-gradient(90deg, rgba(99, 230, 226, 0.08), rgba(99, 230, 226, 0.02)); box-shadow: inset 3px 0 0 #63e6e2; }
+    
+    body.theme-atc .rank-1 { background: linear-gradient(90deg, rgba(103, 232, 165, 0.18), rgba(103, 232, 165, 0.04)); color: #9df5c8; box-shadow:none;}
+    body.theme-atc .rank-2 { background: linear-gradient(90deg, rgba(99, 230, 226, 0.10), rgba(99, 230, 226, 0.025)); border-left-color: #63e6e2;}
+    body.theme-atc .rank-3 { background: linear-gradient(90deg, rgba(255, 209, 102, 0.08), transparent); border-left-color: #ffd166;}
+    
+    body.theme-atc .pilot-icon { border-color: rgba(99, 230, 226, 0.7); box-shadow: 0 0 8px rgba(99, 230, 226, 0.12); border-radius: 2px; }
+    body.theme-atc .pilot-icon-fallback { border-color: rgba(99, 230, 226, 0.35); border-radius: 2px; color: #63e6e2; background: rgba(99, 230, 226, 0.04); }
+    
+    body.theme-atc .ranking-board.race-board h2 { color: #ff9f43; border-bottom-color: rgba(255, 159, 67, 0.45); text-shadow: 0 0 6px rgba(255, 159, 67, 0.25); }
+    body.theme-atc .ranking-board h2 { color: #63e6e2; border-bottom-color: rgba(99, 230, 226, 0.25); text-shadow: 0 0 6px rgba(99, 230, 226, 0.2); }
+    
+    body.theme-atc button { border-color: rgba(99, 230, 226, 0.4); background: linear-gradient(180deg, #102c33, #091c21); color: #b9efec; box-shadow: inset 0 0 10px rgba(99, 230, 226, 0.025); transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease; }
+    body.theme-atc button:hover { border-color: #63e6e2; background: linear-gradient(180deg, #153b43, #0b252b); box-shadow: 0 0 10px rgba(99, 230, 226, 0.12); transform: translateY(-1px); }
+    body.theme-atc button:active { transform: translateY(0); box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3); }
+    
+    body.theme-atc .sys-log-terminal { background: rgba(5, 17, 21, 0.97); border-color: rgba(99, 230, 226, 0.45); box-shadow: 0 0 20px rgba(99, 230, 226, 0.08); }
+    body.theme-atc .log-header { background: #17434a; color: #9cf3ef; border-bottom: 1px solid rgba(99, 230, 226, 0.3); letter-spacing: 1px; }
+    body.theme-atc .log-content { color: #67e8a5; scrollbar-color: #63e6e2 transparent; }
+    body.theme-atc .log-err { color: #ff6b6b; }
+    body.theme-atc .log-warn { color: #ffd166; }
+    
+    body.theme-atc .status-ok, body.theme-atc .connected, body.theme-atc .online { color: #67e8a5; text-shadow: 0 0 5px rgba(103, 232, 165, 0.25); }
+    body.theme-atc .status-warning, body.theme-atc .warning { color: #ffd166; text-shadow: 0 0 5px rgba(255, 209, 102, 0.25); }
+    body.theme-atc .status-error, body.theme-atc .error { color: #ff6b6b; text-shadow: 0 0 6px rgba(255, 92, 92, 0.3); }
+    
+    body.theme-atc .ranking-container::-webkit-scrollbar-thumb, body.theme-atc .ranking-board::-webkit-scrollbar-thumb { background: #356d72; border-radius: 0; }
+    body.theme-atc .ranking-container::-webkit-scrollbar-track, body.theme-atc .ranking-board::-webkit-scrollbar-track { background: rgba(99, 230, 226, 0.025); }
+    
+    body.theme-atc .dashboard, body.theme-atc .panel, body.theme-atc .card { background: linear-gradient(180deg, rgba(12, 35, 41, 0.95), rgba(7, 22, 27, 0.95)); border-color: rgba(99, 230, 226, 0.25); box-shadow: inset 0 0 18px rgba(99, 230, 226, 0.025); }
+    body.theme-atc .bracket-card { background: linear-gradient(180deg, rgba(12, 35, 41, 0.95), rgba(5, 17, 21, 0.98)); border-color: rgba(99, 230, 226, 0.25); }
+    body.theme-atc .bracket-card:hover { border-color: rgba(99, 230, 226, 0.65); box-shadow: 0 0 15px rgba(99, 230, 226, 0.08); }
+    
+    body.theme-atc .show-view { background: radial-gradient(circle at 50% 45%, rgba(45, 150, 145, 0.08), transparent 45%), #061115; }
+    body.theme-atc .show-view .pilot-card { background: linear-gradient(180deg, rgba(12, 38, 44, 0.96), rgba(5, 20, 24, 0.96)); border-color: rgba(99, 230, 226, 0.35); box-shadow: inset 0 0 15px rgba(99, 230, 226, 0.025); }
+    
+    body.theme-atc .live, body.theme-atc .active, body.theme-atc .running { position: relative; border-color: rgba(103, 232, 165, 0.7); box-shadow: 0 0 12px rgba(103, 232, 165, 0.12); }
+    body.theme-atc .live::before, body.theme-atc .active::before, body.theme-atc .running::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: #67e8a5; box-shadow: 0 0 8px rgba(103, 232, 165, 0.8); animation: atc-live-beacon 1.2s infinite; }
+    @keyframes atc-live-beacon { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+    
+    body.theme-atc .conflict, body.theme-atc .danger, body.theme-atc .alert { color: #ff6b6b !important; border-color: rgba(255, 92, 92, 0.65) !important; background: rgba(255, 92, 92, 0.06) !important; animation: atc-alert-pulse 0.9s infinite alternate; }
+    @keyframes atc-alert-pulse { from { box-shadow: inset 0 0 0 rgba(255, 92, 92, 0); } to { box-shadow: inset 0 0 20px rgba(255, 92, 92, 0.10); } }
+    
+    body.theme-atc input, body.theme-atc select, body.theme-atc textarea { background: #081b20; color: #d9f7f5; border-color: rgba(99, 230, 226, 0.3); outline: none; }
+    body.theme-atc input:focus, body.theme-atc select:focus, body.theme-atc textarea:focus { border-color: #63e6e2; box-shadow: 0 0 8px rgba(99, 230, 226, 0.12); }
+    
+    body.theme-atc .label, body.theme-atc .caption, body.theme-atc small { color: rgba(156, 243, 239, 0.58); letter-spacing: 1.2px; }
+    body.theme-atc hr { border: 0; border-top: 1px solid rgba(99, 230, 226, 0.2); }
+    body.theme-atc .race-status { color: #ffd166; border-color: rgba(255, 209, 102, 0.35); background: rgba(255, 209, 102, 0.045); }
+    
+    @keyframes atc-contact-ping { 0% { box-shadow: 0 0 0 0 rgba(99, 230, 226, 0.35); } 70% { box-shadow: 0 0 0 8px rgba(99, 230, 226, 0); } 100% { box-shadow: 0 0 0 0 rgba(99, 230, 226, 0); } }
+    body.theme-atc .pilot-active { animation: atc-contact-ping 1.8s infinite; }
+</style>
 </head>
 <body class="theme-cyber">
+
+<!-- ----------------------------------------------------------
+     ⚡ 追加: SHOW VIEW 専用レイアウト (別ウィンドウで最大化表示)
+     ---------------------------------------------------------- -->
+<div id="showViewUI">
+  <div class="sv-header">
+    <div class="sv-title" id="svSysTitle">WTW SHIZUOKA</div>
+    <div class="sv-heat-name" id="svHeatName">STANDBY...</div>
+  </div>
+  <div class="sv-main">
+    <div class="sv-leaderboard" id="svLeaderboard">
+       <!-- JSでパイロットカードが動的に生成されます -->
+       <div style="color:#555; text-align:center; font-family:'Orbitron'; font-size:30px; margin-top:100px; animation: pulse 2s infinite;">WAITING FOR RACE DATA...</div>
+    </div>
+    <div class="sv-timeline">
+       <h3 style="color:var(--neon-cyan); font-family:'Orbitron'; font-size:28px; margin:0 0 20px 0; border-bottom:2px dashed var(--neon-cyan); padding-bottom:15px; letter-spacing:2px;">⚡ EVENT TIMELINE</h3>
+       <div id="svTimelineFeed" style="flex:1; overflow:hidden; display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+  </div>
+</div>
 
 <div id="customDialogOverlay" class="modal-overlay" style="z-index: 99999;">
   <div class="modal-content" style="width: 450px; text-align: center; padding: 30px; border-color: var(--neon-cyan); box-shadow: 0 0 30px rgba(0, 243, 255, 0.2), inset 0 0 20px rgba(0, 243, 255, 0.05);">
@@ -613,11 +761,11 @@
           <div class="flex-group">
             <div class="mecha-panel">
               <label>BGM:</label>
-              <button id="btnBgmPlay" class="mecha-btn">PLAY</button>
-              <button id="btnBgmNext" class="mecha-btn">NEXT</button>
-              <button id="btnBgmOff" class="mecha-btn active-mode">OFF</button>
-              <input type="range" id="bgmVolumeSlider" min="0" max="1" step="0.05" value="0.5" title="BGM Volume">
-              <span id="bgmTrackName" style="font-size: 9px; color: var(--neon-cyan); margin-left: 2px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">No Dir Selected</span>
+              <button id="btnBgmPlay" class="mecha-btn" style="padding:2px 6px;">▶</button>
+              <button id="btnBgmNext" class="mecha-btn" style="padding:2px 6px;">⏭</button>
+              <button id="btnBgmOff" class="mecha-btn active-mode" style="padding:2px 6px;">■</button>
+              <input type="range" id="bgmVolumeSlider" min="0" max="1" step="0.05" value="0.5" title="BGM Volume" style="width: 40px;">
+              <span id="bgmTrackName" style="font-size: 9px; color: var(--neon-cyan); margin-left: 2px; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">No Dir Selected</span>
             </div>
             <button id="btnManualFx" class="mecha-btn btn-vj">[ ⚡ FX PLAY ]</button>
             <button id="btnPlayCeremony" class="mecha-btn btn-action" style="color:var(--neon-green); border-color:var(--neon-green);">[ 🎉 CEREMONY ]</button>
@@ -628,32 +776,37 @@
           <div class="flex-group">
             <div class="mecha-panel">
               <label>DATA:</label>
-              <select id="dateSelector"><option value="">-- WAITING --</option></select>
-            </div>
-            <div class="mecha-panel">
-              <label style="color: var(--neon-pink);">LAPS:</label>
-              <input type="number" id="raceLapsInput" value="3" min="1">
-            </div>
-            <!-- ⚡ 追加: オートネクスト & オートフィニッシュタイマー設定パネル -->
-            <div class="mecha-panel" style="border-color:var(--neon-yellow);">
-              <label style="color:var(--neon-yellow);">AUTO NEXT:</label>
-              <input type="number" id="autoNextSecInput" value="30" min="5" style="width:40px;">
-              <span style="font-size:10px; color:#aaa; margin-right:4px;">s</span>
-              <button id="btnToggleAutoNext" class="mecha-btn">OFF</button>
+              <select id="dateSelector" style="max-width: 120px;"><option value="">-- WAITING --</option></select>
             </div>
             <div class="mecha-panel" style="border-color:var(--neon-pink);">
-              <label style="color:var(--neon-pink);">AUTO FINISH:</label>
-              <button id="btnToggleAutoFinish" class="mecha-btn">OFF</button>
+              <label style="color: var(--neon-pink);">LAPS:</label>
+              <input type="number" id="raceLapsInput" value="3" min="1" style="width:30px; font-weight:bold; color:var(--neon-pink);">
             </div>
-            <div class="mecha-panel" style="border-color:var(--neon-green);">
-              <label style="color:var(--neon-green);">FULL AUTO:</label>
-              <button id="btnToggleFullAuto" class="mecha-btn">OFF</button>
+            
+            <!-- ⚡ 修正: 散らばっていたAUTO系設定を1つのコックピット風パネルに集約 -->
+            <div class="mecha-panel" style="border-color:#555; background:rgba(0,0,0,0.8);">
+              <label style="color:#aaa;">AUTO MODE:</label>
+              <span style="font-size:9px; color:var(--neon-yellow); margin-left:4px;">NEXT</span>
+              <input type="number" id="autoNextSecInput" value="30" min="5" style="width:30px; padding:2px; height:14px; margin-right:2px; border-color:var(--neon-yellow); color:var(--neon-yellow);">
+              <button id="btnToggleAutoNext" class="mecha-btn" style="padding:2px 6px; border-color:var(--neon-yellow);">OFF</button>
+              
+              <span style="font-size:9px; color:var(--neon-pink); margin-left:8px;">FINISH</span>
+              <button id="btnToggleAutoFinish" class="mecha-btn" style="padding:2px 6px; border-color:var(--neon-pink);">OFF</button>
+              
+              <span style="font-size:9px; color:var(--neon-cyan); margin-left:8px;">REPLAY</span>
+              <button id="btnToggleAutoReplay" class="mecha-btn" style="padding:2px 6px; border-color:var(--neon-cyan);">OFF</button>
+              
+              <div style="width:1px; height:12px; background:#444; margin:0 6px;"></div>
+              
+              <span style="font-size:9px; color:var(--neon-green); font-weight:bold;">FULL</span>
+              <button id="btnToggleFullAuto" class="mecha-btn" style="padding:2px 8px; border-color:var(--neon-green); color:var(--neon-green); font-weight:bold;">OFF</button>
+
+              <!-- ⚡ 追加: プラクティス用 無限ループ生成スイッチ -->
+              <div style="width:1px; height:12px; background:#444; margin:0 6px;"></div>
+              <span style="font-size:9px; color:#b055ff; font-weight:bold;">LOOP</span>
+              <button id="btnToggleEndlessLoop" class="mecha-btn" style="padding:2px 8px; border-color:#b055ff; color:#b055ff; font-weight:bold;" title="PRACTICE MODE: ドラフトを雛形にしてヒートを無限生成します">OFF</button>
             </div>
-            <!-- ⚡ 追加: 自動ハイライト（リプレイバッファ）のON/OFFスイッチ -->
-            <div class="mecha-panel" style="border-color:var(--neon-cyan);">
-              <label style="color:var(--neon-cyan);">AUTO REPLAY:</label>
-              <button id="btnToggleAutoReplay" class="mecha-btn">OFF</button>
-            </div>
+            
             <div class="db-search-wrapper">
               <span class="db-search-icon">🔍</span>
               <input type="text" id="pilotSearchInput" class="db-search-input" placeholder="PILOT DB..." autocomplete="off">
@@ -663,7 +816,6 @@
           <div class="flex-group">
             <button id="btnOpenDirector" class="mecha-btn btn-dir">[ 🎤 DIRECTOR ]</button>
             <button id="btnOpenSeriesMgr" class="mecha-btn btn-dir" style="color:var(--neon-green); border-color:var(--neon-green);">[ 🏆 SERIES MGR ]</button>
-            <button id="btnFullscreen" class="mecha-btn">[ FULLSCREEN ]</button>
           </div>
         </div>
 
@@ -674,13 +826,29 @@
             </div>
           </div>
           <div class="flex-group">
-            <button id="btnSnapshotReset" class="mecha-btn" style="color:var(--neon-yellow); border-color:var(--neon-yellow);">[ 💾 SNAPSHOT & RESET LIVE ]</button>
-            <button id="btnExportCSV" class="mecha-btn">[ RACE CSV ]</button>
-            <button id="btnExportCloud" class="mecha-btn btn-export">[ CLOUD EXPORT ]</button>
-            <!-- ⚡ 追加: 手動同期ボタン -->
-            <button id="btnSyncViewer" class="mecha-btn" style="color:var(--neon-cyan); border-color:var(--neon-cyan);">[ 📡 SYNC VIEWER ]</button>
-            <button id="btnSettings" class="mecha-btn">[ SETTINGS ]</button>
-            <button id="btnOpenRecovery" class="mecha-btn btn-action" style="color:var(--neon-pink); border-color:var(--neon-pink);">[ 🔄 RECOVERY MGR ]</button>
+            <!-- ⚡ 修正: 冗長な文字を削り、アイコンを活用してスマート化 -->
+            <button id="btnSnapshotReset" class="mecha-btn" style="color:var(--neon-yellow); border-color:var(--neon-yellow);">[ 💾 SNAPSHOT ]</button>
+            
+            <div class="mecha-panel">
+              <label>EXPORT:</label>
+              <button id="btnExportCSV" class="mecha-btn" style="padding:2px 6px;">CSV</button>
+              <button id="btnExportCloud" class="mecha-btn btn-export" style="padding:2px 6px;">CLOUD</button>
+            </div>
+            
+            <button id="btnSyncViewer" class="mecha-btn" style="color:var(--neon-cyan); border-color:var(--neon-cyan);">[ 📡 SYNC ]</button>
+            <button id="btnOpenRecovery" class="mecha-btn btn-action" style="color:var(--neon-pink); border-color:var(--neon-pink);">[ 🔄 RECOVERY ]</button>
+            
+            <!-- ⚡ 修正: OBSシーン切替パネルと SHOW VIEWを開くボタン -->
+            <div class="mecha-panel" style="border-color: var(--neon-cyan);">
+               <label style="color: var(--neon-cyan);">OBS OUT:</label>
+               <button id="btnObsTvp" class="mecha-btn" style="padding:2px 8px; color:#aaa; font-weight:bold;" onclick="OBSManager.switchScene(OBSManager.sceneNameTVP)">⏱ TVP <span class="shortcut-key">[T]</span></button>
+               <button id="btnObsShowView" class="mecha-btn active-mode" style="padding:2px 8px; color:var(--neon-yellow); font-weight:bold;" onclick="OBSManager.switchScene(OBSManager.sceneNameShowView)">📺 SHOW VIEW <span class="shortcut-key">[T]</span></button>
+               <button id="btnObsNrd" class="mecha-btn" style="padding:2px 8px; font-weight:bold;" onclick="OBSManager.switchScene(OBSManager.sceneNameNRD)">💻 NRD MAIN <span class="shortcut-key">[T]</span></button>
+            </div>
+            <button id="btnOpenShowView" class="mecha-btn" style="color:var(--neon-yellow); border-color:var(--neon-yellow); font-weight:bold;" title="別ウィンドウで観客用画面を開きます">[ 📺 OPEN SHOW VIEW ]</button>
+            
+            <button id="btnSettings" class="mecha-btn">[ ⚙️ SETTINGS ]</button>
+            <button id="btnFullscreen" class="mecha-btn">[ 🖥️ FULLSCREEN ]</button>
           </div>
         </div>
       </div>
@@ -991,6 +1159,17 @@
       </div>
     </div>
 
+    <!-- ⚡ 追加: OBS WebSocket パスワード設定欄 -->
+    <div class="setting-group" style="background:rgba(255,255,255,0.05); padding:15px; border-left:3px solid var(--neon-cyan); margin-bottom:15px;">
+      <h3 style="margin:0 0 10px 0; font-size:14px; color:var(--neon-yellow);">🔌 OBS WebSocket Config</h3>
+      <label>認証パスワード (※OBS側の設定と一致させてください):</label>
+      <div style="display:flex; gap:10px;">
+        <input type="password" id="obsPasswordInput" style="flex:1;" placeholder="未入力の場合はパスワードなしで接続します">
+        <button class="mecha-btn btn-action" id="btnSaveObsPassword">SAVE</button>
+      </div>
+      <div style="font-size:9px; color:#aaa; margin-top:5px;">※保存後、ページをリロードすると自動的に新しいパスワードでOBSへ接続を試みます。</div>
+    </div>
+
     <div class="setting-group" style="background:rgba(255,255,255,0.05); padding:15px; border-left:3px solid var(--neon-cyan); margin-bottom:15px;">
       <h3 style="margin:0 0 10px 0; font-size:14px; color:var(--neon-yellow);">⌨️ Keyboard Shortcuts</h3>
       <table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">
@@ -1002,7 +1181,8 @@
         <tr><td style="padding:4px;">[ D ]</td><td>Toggle Dashboard</td><td style="padding:4px;">[ J ]</td><td>Toggle BGM Play/Pause</td></tr>
         <tr><td style="padding:4px;">[ F ]</td><td>Toggle Fullscreen</td><td style="padding:4px;">[ K ]</td><td>Play Next BGM</td></tr>
         <tr><td style="padding:4px;">[ O ]</td><td>Open Director Modal</td><td style="padding:4px;">[ [ ] / [ ] ]</td><td>Volume Down / Up</td></tr>
-        <tr><td style="padding:4px;">[ S ]</td><td>Toggle Auto Scroll</td><td style="padding:4px; color:var(--neon-yellow); font-weight:bold;">[ Z,X,C,V... ]</td><td style="color:var(--neon-yellow); font-weight:bold;">Manual Lap Trigger</td></tr>
+        <tr><td style="padding:4px;">[ S ]</td><td>Toggle Auto Scroll</td><td style="padding:4px; color:var(--neon-pink); font-weight:bold;">[ T ]</td><td style="color:var(--neon-pink); font-weight:bold;">Toggle OBS Scene (SHOW VIEW/NRD)</td></tr>
+        <tr><td style="padding:4px;"></td><td></td><td style="padding:4px; color:var(--neon-yellow); font-weight:bold;">[ Z,X,C,V... ]</td><td style="color:var(--neon-yellow); font-weight:bold;">Manual Lap Trigger</td></tr>
       </table>
     </div>
 
@@ -1083,6 +1263,8 @@
         <button class="mecha-btn btn-theme" onclick="changeTheme('theme-retro', this)">RETRO ARCADE</button>
         <button class="mecha-btn btn-theme" onclick="changeTheme('theme-minimal', this)">MINIMAL MONOCHROME</button>
         <button class="mecha-btn btn-theme" onclick="changeTheme('theme-terminal', this)">HACKER TERMINAL</button>
+        <!-- ⚡ ATCテーマボタンを追加 -->
+        <button class="mecha-btn btn-theme" onclick="changeTheme('theme-atc', this)">ATC FLIGHT CONTROL</button>
       </div>
      </div>
     <div class="setting-group" style="background:rgba(255,255,255,0.05); padding:15px; border-left:3px solid var(--neon-cyan); margin-bottom:15px;">
@@ -1219,15 +1401,608 @@
   // ====================================================
   // 1. グローバル変数 & 基礎システム
   // ====================================================
-  // ⚡ 追加: OBS WebSocket 自動録画モジュール
+  // ----------------------------------------------------------
+  // ⚡ 追加: SHOW VIEW MANAGER (独立した観客用描画エンジン)
+  // ----------------------------------------------------------
+  const ShowViewManager = {
+      isShowMode: false,
+      
+      init: function() {
+          this.isShowMode = true;
+          document.body.classList.add('show-mode');
+          document.title = "N.R.D - SHOW VIEW";
+          
+          window.addEventListener('storage', (e) => {
+              if (e.key === 'nrd_sync_state') {
+                  const data = JSON.parse(e.newValue);
+                  if (data.action === 'SUMMARY') {
+                      this.renderSummary(data);
+                  } else if (data.action === 'RANKING') {
+                      this.renderRankingView(data);
+                  } else if (data.action === 'OVERALL') {
+                      this.renderOverallView(data);
+                  } else if (data.action === 'SERIES') {
+                      this.renderSeriesView(data);
+                  } else {
+                      this.render(data);
+                  }
+              } else if (e.key === 'nrd_sync_moment') {
+                  const moment = JSON.parse(e.newValue);
+                  triggerMomentEffect(moment.text, moment.color);
+              }
+          });
+          
+          const existingData = localStorage.getItem('nrd_sync_state');
+          if (existingData) {
+              const data = JSON.parse(existingData);
+              if (data.action === 'SUMMARY') this.renderSummary(data);
+              else if (data.action === 'RANKING') this.renderRankingView(data);
+              else if (data.action === 'OVERALL') this.renderOverallView(data);
+              else if (data.action === 'SERIES') this.renderSeriesView(data);
+              else this.render(data);
+          }
+      },
+
+      broadcastState: function(heat, sysTitle) {
+          if (this.isShowMode) return;
+          
+          // ⚡ ディープコピーで配列を安全に複製
+          let baseResults = heat.results && heat.results.length > 0 ? heat.results : TournamentManager.getRealtimeStandings(heat);
+          let sortedResults = baseResults.map(r => ({ ...r }));
+          
+          // ⚡ WAITING時は枠順（originalIndex）、それ以外は成績順にソート
+          if (heat.status === 'WAITING') {
+              sortedResults.sort((a, b) => a.originalIndex - b.originalIndex);
+          } else {
+              sortedResults.sort((a, b) => {
+                  if (a.isPlaceholder && !b.isPlaceholder) return 1; 
+                  if (!a.isPlaceholder && b.isPlaceholder) return -1;
+                  if (a.isDSQ && !b.isDSQ) return 1;
+                  if (!a.isDSQ && b.isDSQ) return -1;
+                  if (a.isDNF && !b.isDNF) return 1;
+                  if (!a.isDNF && b.isDNF) return -1;
+                  if (a.laps !== b.laps) return b.laps - a.laps; 
+                  // JSON化でInfinityが消えるバグを防ぐため、非常に大きな数値に置き換えて比較
+                  let aTime = (a.timeMs === null || a.timeMs === Infinity) ? 99999999 : a.timeMs;
+                  let bTime = (b.timeMs === null || b.timeMs === Infinity) ? 99999999 : b.timeMs;
+                  return aTime - bTime;
+              });
+          }
+
+          // ⚡ 各パイロットの周波数に対応するカメラ枠のカラーコードを計算
+          const bandColors = ['#ff3c3c', '#3cff3c', '#3c9dff', '#fcee0a', '#ff00ff', '#00ffff', '#ff9900', '#ffffff'];
+          sortedResults.forEach(r => {
+              r.bandColor = 'var(--neon-cyan)'; 
+              if (r.originalData && r.originalData.band) {
+                  let cIdx = TournamentManager.availableBands.indexOf(r.originalData.band);
+                  if (cIdx !== -1) {
+                      r.bandColor = bandColors[cIdx % 8];
+                  }
+              }
+          });
+
+          const payload = {
+              action: "NORMAL", // ⚡ 追加: 通常モードのフラグ
+              timestamp: Date.now(),
+              sysTitle: sysTitle || "WTW SHIZUOKA",
+              heatName: heat.name,
+              status: heat.status,
+              results: sortedResults,
+              timeline: heat.timeline || [],
+              icons: window.cloudIconCache || {},
+              overallStats: TournamentManager.getOverallRanking() 
+          };
+          localStorage.setItem('nrd_sync_state', JSON.stringify(payload));
+      },
+
+      // ⚡ 追加: サマリー専用のブロードキャスト
+      broadcastSummary: function(sysTitle) {
+          if (this.isShowMode) return;
+          const payload = {
+              action: "SUMMARY",
+              timestamp: Date.now(),
+              sysTitle: sysTitle || "WTW SHIZUOKA",
+              summary: TournamentManager.generateSummary(),
+              icons: window.cloudIconCache || {} 
+          };
+          localStorage.setItem('nrd_sync_state', JSON.stringify(payload));
+      },
+
+      broadcastRanking: function(sysTitle, mode) {
+          if (this.isShowMode) return;
+          const selectedDate = document.getElementById('dateSelector').value;
+          if (!selectedDate) return;
+          let bestData = selectedDate.startsWith('[SNAPSHOT]') ? snapshotData_Best[selectedDate.replace('[SNAPSHOT] ', '')] : dataByDate_Best[selectedDate];
+          let raceData = selectedDate.startsWith('[SNAPSHOT]') ? snapshotData_Race[selectedDate.replace('[SNAPSHOT] ', '')] : dataByDate_Race[selectedDate];
+          const payload = {
+              action: "RANKING",
+              timestamp: Date.now(),
+              sysTitle: sysTitle || "WTW SHIZUOKA",
+              mode: mode,
+              bestRanking: bestData || [],
+              raceRanking: raceData || [],
+              icons: window.cloudIconCache || {}
+          };
+          localStorage.setItem('nrd_sync_state', JSON.stringify(payload));
+      },
+
+      broadcastBracket: function(sysTitle) {
+          if (this.isShowMode) return;
+          // ⚡ 修正: 進行中・待機中がない場合（全レース終了後など）は、最新の完了済みヒートを表示させる
+          let activeHeatForShow = TournamentManager.heats.find(h => h.status === 'ACTIVE') || TournamentManager.heats.find(h => h.status === 'WAITING');
+          if (!activeHeatForShow && TournamentManager.heats.length > 0) {
+              activeHeatForShow = TournamentManager.heats[TournamentManager.heats.length - 1];
+          }
+          
+          if (activeHeatForShow) {
+              this.broadcastState(activeHeatForShow, sysTitle);
+          } else {
+              // ヒートが一つもない場合は空の基本画面を強制送信
+              const payload = {
+                  action: "NORMAL",
+                  timestamp: Date.now(),
+                  sysTitle: sysTitle || "WTW SHIZUOKA",
+                  heatName: "STANDBY...",
+                  status: "WAITING",
+                  results: [],
+                  timeline: [],
+                  icons: window.cloudIconCache || {},
+                  overallStats: []
+              };
+              localStorage.setItem('nrd_sync_state', JSON.stringify(payload));
+          }
+      },
+
+      broadcastOverall: function(sysTitle) {
+          if (this.isShowMode) return;
+          const payload = {
+              action: "OVERALL",
+              timestamp: Date.now(),
+              sysTitle: sysTitle || "WTW SHIZUOKA",
+              ranking: TournamentManager.getOverallRanking(),
+              icons: window.cloudIconCache || {}
+          };
+          localStorage.setItem('nrd_sync_state', JSON.stringify(payload));
+      },
+
+      broadcastSeries: function(sysTitle) {
+          if (this.isShowMode) return;
+          let sData = null; let sRanking = [];
+          if (SeriesManager.activeSeriesId && SeriesManager.seriesList[SeriesManager.activeSeriesId]) {
+              sData = SeriesManager.seriesList[SeriesManager.activeSeriesId];
+              sRanking = SeriesManager.getSeriesRanking(SeriesManager.activeSeriesId);
+          }
+          const payload = {
+              action: "SERIES",
+              timestamp: Date.now(),
+              sysTitle: sysTitle || "WTW SHIZUOKA",
+              seriesData: sData,
+              ranking: sRanking,
+              icons: window.cloudIconCache || {}
+          };
+          localStorage.setItem('nrd_sync_state', JSON.stringify(payload));
+      },
+
+      // ⚡ 追加: サマリー画面の描画エンジン
+      renderSummary: function(data) {
+          document.getElementById('svSysTitle').innerText = data.sysTitle;
+          document.getElementById('svHeatName').innerText = "RACE SUMMARY";
+          
+          const s = data.summary;
+          const pNames = s.podium || [];
+          
+          // ⚡ 追加: アイコンと名前の取得ヘルパー
+          const getPilotInfo = (rankIndex) => {
+              let name = pNames.length > rankIndex ? pNames[rankIndex] : "---";
+              let url = `https://api.dicebear.com/8.x/bottts/png?seed=${encodeURIComponent(name)}&backgroundColor=111111,1a1a1a,050505&size=256`;
+              if (data.icons && data.icons[name]) url = data.icons[name];
+              return { name, url };
+          };
+
+          const p1 = getPilotInfo(0);
+          const p2 = getPilotInfo(1);
+          const p3 = getPilotInfo(2);
+          
+          // メイン領域を2カラムの派手なデザインで上書き
+          const mainArea = document.querySelector('.sv-main');
+          mainArea.innerHTML = `
+              <div style="flex:1; background:linear-gradient(135deg, rgba(252,238,10,0.15), rgba(0,0,0,0.9)); border:2px solid var(--neon-yellow); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; box-shadow:inset 0 0 50px rgba(252,238,10,0.1), 0 10px 40px rgba(0,0,0,0.8);">
+                  <div style="font-family:'Orbitron'; font-size:45px; color:var(--neon-yellow); letter-spacing:4px; margin-bottom:40px; text-shadow:0 0 20px var(--neon-yellow);">🏆 TOURNAMENT PODIUM</div>
+                  
+                  <div style="display:flex; align-items:flex-end; justify-content:center; gap:30px; width:100%;">
+                      <!-- 2ND -->
+                      <div style="display:flex; flex-direction:column; align-items:center; opacity:0.9;">
+                          <img src="${p2.url}" style="width:160px; height:160px; border-radius:50%; border:4px solid #c0c0c0; background:#111; object-fit:cover; margin-bottom:15px; box-shadow:0 0 20px rgba(192,192,192,0.4);">
+                          <div style="font-family:'Orbitron'; font-size:24px; color:#c0c0c0; text-shadow:0 0 10px rgba(192,192,192,0.6); margin-bottom:5px;">2ND PLACE</div>
+                          <div style="font-family:'Orbitron'; font-size:35px; font-weight:bold; color:#fff;">${p2.name}</div>
+                      </div>
+                      
+                      <!-- 1ST -->
+                      <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:40px;">
+                          <img src="${p1.url}" style="width:220px; height:220px; border-radius:50%; border:6px solid var(--neon-yellow); background:#111; object-fit:cover; margin-bottom:20px; box-shadow:0 0 40px rgba(252,238,10,0.6);">
+                          <div style="font-family:'Orbitron'; font-size:30px; color:var(--neon-yellow); text-shadow:0 0 15px var(--neon-yellow); margin-bottom:5px; font-weight:900;">1ST CHAMPION</div>
+                          <div style="font-family:'Orbitron'; font-size:50px; font-weight:900; color:#fff; text-shadow:0 0 20px rgba(255,255,255,0.6);">${p1.name}</div>
+                      </div>
+                      
+                      <!-- 3RD -->
+                      <div style="display:flex; flex-direction:column; align-items:center; opacity:0.8;">
+                          <img src="${p3.url}" style="width:140px; height:140px; border-radius:50%; border:4px solid #cd7f32; background:#111; object-fit:cover; margin-bottom:15px; box-shadow:0 0 20px rgba(205,127,50,0.4);">
+                          <div style="font-family:'Orbitron'; font-size:20px; color:#cd7f32; text-shadow:0 0 10px rgba(205,127,50,0.6); margin-bottom:5px;">3RD PLACE</div>
+                          <div style="font-family:'Orbitron'; font-size:30px; font-weight:bold; color:#fff;">${p3.name}</div>
+                      </div>
+                  </div>
+              </div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:25px; justify-content:center; padding-left:20px;">
+                  <div class="sv-pilot-card" style="border-left-color:var(--neon-cyan); padding:25px;">
+                      <div style="font-family:'Share Tech Mono'; font-size:22px; color:var(--neon-cyan);">🏁 RACES & PILOTS</div>
+                      <div style="font-family:'Orbitron'; font-size:40px; color:#fff; font-weight:bold; margin-top:5px;">${s.totalHeats} HEATS <span style="color:#666;">/</span> ${s.totalPilots} PILOTS</div>
+                  </div>
+                  <div class="sv-pilot-card" style="border-left-color:var(--neon-green); padding:25px;">
+                      <div style="font-family:'Share Tech Mono'; font-size:22px; color:var(--neon-green);">⚡ FASTEST LAP</div>
+                      <div style="font-family:'Orbitron'; font-size:40px; color:#fff; font-weight:bold; margin-top:5px;">${s.fastestLap.timeStr} <span style="color:#aaa; font-size:28px;">by ${s.fastestLap.pilot}</span></div>
+                  </div>
+                  <div class="sv-pilot-card" style="border-left-color:var(--neon-pink); padding:25px;">
+                      <div style="font-family:'Share Tech Mono'; font-size:22px; color:var(--neon-pink);">🔥 MOST OVERTAKES</div>
+                      <div style="font-family:'Orbitron'; font-size:40px; color:#fff; font-weight:bold; margin-top:5px;">${s.mostOvertakes.pilot} <span style="color:#aaa; font-size:28px;">(${s.mostOvertakes.count} PASSES)</span></div>
+                  </div>
+                  <div class="sv-pilot-card" style="border-left-color:var(--neon-orange); padding:25px;">
+                      <div style="font-family:'Share Tech Mono'; font-size:22px; color:var(--neon-orange);">🚀 BIGGEST COMEBACK</div>
+                      <div style="font-family:'Orbitron'; font-size:40px; color:#fff; font-weight:bold; margin-top:5px;">${s.biggestComeback.pilot} <span style="color:#aaa; font-size:28px;">(+${s.biggestComeback.up} POS)</span></div>
+                  </div>
+                  <div class="sv-pilot-card" style="border-left-color:#b055ff; padding:25px;">
+                      <div style="font-family:'Share Tech Mono'; font-size:22px; color:#b055ff;">🎬 TOP MOMENT [${s.topMoment.heatName}]</div>
+                      <div style="font-family:'Orbitron'; font-size:30px; color:#fff; font-weight:bold; line-height:1.2; margin-top:10px;">${s.topMoment.message}</div>
+                  </div>
+              </div>
+          `;
+      },
+
+      broadcastMoment: function(text, color) {
+          if (this.isShowMode) return;
+          localStorage.setItem('nrd_sync_moment', JSON.stringify({ timestamp: Date.now(), text, color }));
+      },
+
+      renderRankingView: function(data) {
+          document.getElementById('svSysTitle').innerText = data.sysTitle;
+          document.getElementById('svHeatName').innerText = "🏆 QUALIFY RANKING";
+          const mainArea = document.querySelector('.sv-main');
+          
+          const createTableHtml = (title, rankingData, titleColor, timeLabel, isBest) => {
+              let rowsHtml = '';
+              rankingData.slice(0, 16).forEach((r, idx) => { // 上位16名まで表示
+                  let pos = idx + 1;
+                  let trClass = pos === 1 ? 'rank-1' : pos === 2 ? 'rank-2' : pos === 3 ? 'rank-3' : '';
+                  let iconUrl = data.icons[r.name] || data.icons[sanitizeFilename(r.name)] || `https://api.dicebear.com/8.x/bottts/png?seed=${encodeURIComponent(r.name)}&backgroundColor=111111,1a1a1a,050505&size=128`;
+                  let timeStr = isBest ? r.best.toFixed(2) : (r.total === "DNF" ? "DNF" : r.total);
+                  let gapStr = idx > 0 ? `+${isBest ? (r.best - rankingData[idx-1].best).toFixed(2) : ((r.totalMs - rankingData[idx-1].totalMs)/1000).toFixed(2)}` : "-";
+                  rowsHtml += `
+                      <tr class="${trClass}">
+                          <td style="padding: 10px 15px; font-family: 'Orbitron'; font-size: 20px; text-align: center; border-bottom: 1px solid rgba(0, 243, 255, 0.1);">${pos}</td>
+                          <td style="padding: 10px 5px; border-bottom: 1px solid rgba(0, 243, 255, 0.1);">
+                              <div style="display: flex; align-items: center; gap: 10px;">
+                                  <img src="${iconUrl}" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid ${titleColor}; background: #111;">
+                                  <span style="font-size: 20px; font-weight: bold; color: ${pos === 1 ? 'inherit' : '#fff'};">${r.name}</span>
+                              </div>
+                          </td>
+                          <td style="padding: 10px 5px; text-align: center; font-size: 18px; border-bottom: 1px solid rgba(0, 243, 255, 0.1);">${r.laps}</td>
+                          <td style="padding: 10px 5px; text-align: right; font-family: 'Share Tech Mono'; font-size: 22px; font-weight: bold; color: ${pos === 1 ? 'inherit' : titleColor}; border-bottom: 1px solid rgba(0, 243, 255, 0.1);">${timeStr}</td>
+                          <td style="padding: 10px 15px; text-align: right; font-family: 'Share Tech Mono'; font-size: 14px; color: ${pos === 1 ? 'inherit' : '#aaa'}; border-bottom: 1px solid rgba(0, 243, 255, 0.1);">${gapStr}</td>
+                      </tr>
+                  `;
+              });
+              return `
+                  <div style="flex: 1; background: rgba(5,10,15,0.9); border: 2px solid ${titleColor}; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; isolation: isolate;">
+                      <h2 style="font-family: 'Orbitron'; color: ${titleColor}; text-align: center; margin: 0; padding: 15px 0; font-size: 24px; background: #050a0f; border-bottom: 1px solid ${titleColor}; z-index: 1000; position: relative;">${title}</h2>
+                      <div style="flex: 1; overflow-y: auto; padding: 0 10px;">
+                          <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                              <thead style="position: sticky; top: 0; z-index: 999;">
+                                  <tr>
+                                      <th style="position: sticky; top: 0; background: #050a0f; color: ${titleColor}; font-family: 'Orbitron'; font-size: 16px; padding: 10px 15px; border-bottom: 2px solid ${titleColor}; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">POS</th>
+                                      <th style="position: sticky; top: 0; background: #050a0f; color: ${titleColor}; font-family: 'Orbitron'; font-size: 16px; padding: 10px 5px; text-align: left; border-bottom: 2px solid ${titleColor}; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">PILOT</th>
+                                      <th style="position: sticky; top: 0; background: #050a0f; color: ${titleColor}; font-family: 'Orbitron'; font-size: 16px; padding: 10px 5px; border-bottom: 2px solid ${titleColor}; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">LAPS</th>
+                                      <th style="position: sticky; top: 0; background: #050a0f; color: ${titleColor}; font-family: 'Orbitron'; font-size: 16px; padding: 10px 5px; text-align: right; border-bottom: 2px solid ${titleColor}; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">${timeLabel}</th>
+                                      <th style="position: sticky; top: 0; background: #050a0f; color: ${titleColor}; font-family: 'Orbitron'; font-size: 16px; padding: 10px 15px; text-align: right; border-bottom: 2px solid ${titleColor}; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">GAP</th>
+                                  </tr>
+                              </thead>
+                              <tbody>${rowsHtml}</tbody>
+                          </table>
+                      </div>
+                  </div>
+              `;
+          };
+
+          let html = '';
+          if (data.mode === 'dual') {
+              html = `<div style="display: flex; gap: 30px; width: 100%; height: 100%;">
+                  ${createTableHtml("★ BEST LAP RANKING ★", data.bestRanking, "var(--neon-yellow)", "BEST", true)}
+                  ${createTableHtml("🏁 RACE (TOTAL TIME) 🏁", data.raceRanking, "var(--neon-pink)", "TOTAL TIME", false)}
+              </div>`;
+          } else if (data.mode === 'best') {
+              html = `<div style="width: 70%; margin: 0 auto;">${createTableHtml("★ BEST LAP RANKING ★", data.bestRanking, "var(--neon-yellow)", "BEST", true)}</div>`;
+          } else if (data.mode === 'race') {
+              html = `<div style="width: 70%; margin: 0 auto;">${createTableHtml("🏁 RACE (TOTAL TIME) 🏁", data.raceRanking, "var(--neon-pink)", "TOTAL TIME", false)}</div>`;
+          }
+          mainArea.innerHTML = html;
+      },
+
+      renderOverallView: function(data) {
+          document.getElementById('svSysTitle').innerText = data.sysTitle;
+          document.getElementById('svHeatName').innerText = "🏆 OVERALL RANKING";
+          
+          const mainArea = document.querySelector('.sv-main');
+          let rowsHtml = '';
+          data.ranking.forEach(r => {
+              let trClass = r.pos === 1 ? 'rank-1' : r.pos === 2 ? 'rank-2' : r.pos === 3 ? 'rank-3' : '';
+              let iconUrl = data.icons[r.name] || data.icons[sanitizeFilename(r.name)] || `https://api.dicebear.com/8.x/bottts/png?seed=${encodeURIComponent(r.name)}&backgroundColor=111111,1a1a1a,050505&size=128`;
+              let timeDisplay = r.time === "DNF" ? `<span style="color:var(--neon-pink);">DNF</span>` : r.time;
+
+              rowsHtml += `
+                  <tr class="${trClass}">
+                      <td style="padding: 15px 30px; font-family: 'Orbitron'; font-size: 28px; text-align: center; width: 80px; border-bottom: 1px solid rgba(0, 243, 255, 0.2);">${r.pos}</td>
+                      <td style="padding: 15px 10px; border-bottom: 1px solid rgba(0, 243, 255, 0.2);">
+                          <div style="display: flex; align-items: center; gap: 20px;">
+                              <img src="${iconUrl}" style="width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--neon-cyan); background: #111;">
+                              <span style="font-size: 32px; font-weight: bold; color: ${r.pos === 1 ? 'inherit' : '#fff'};">${r.name}</span>
+                          </div>
+                      </td>
+                      <td style="padding: 15px 10px; color: ${r.pos === 1 ? 'inherit' : '#aaa'}; font-size: 24px; border-bottom: 1px solid rgba(0, 243, 255, 0.2);">${r.lastHeat}</td>
+                      <td style="padding: 15px 10px; text-align: center; font-size: 28px; border-bottom: 1px solid rgba(0, 243, 255, 0.2);">${r.laps}</td>
+                      <td style="padding: 15px 30px; text-align: right; font-family: 'Share Tech Mono'; font-size: 32px; font-weight: bold; color: ${r.pos === 1 ? 'inherit' : 'var(--neon-cyan)'}; border-bottom: 1px solid rgba(0, 243, 255, 0.2);">${timeDisplay}</td>
+                  </tr>
+              `;
+          });
+
+          mainArea.innerHTML = `
+              <div style="flex:1; background:linear-gradient(180deg, rgba(10,20,30,0.9), rgba(5,10,15,0.95)); border:2px solid var(--neon-cyan); border-radius:8px; display:flex; flex-direction:column; box-shadow:inset 0 0 50px rgba(0,243,255,0.1), 0 10px 40px rgba(0,0,0,0.8); padding-top:20px; overflow:hidden; isolation: isolate;">
+                  <div style="flex:1; overflow-y:auto; padding: 0 20px;">
+                      <table style="width: 100%; border-collapse: separate; border-spacing: 0; padding-bottom: 30px;">
+                          <thead style="position: sticky; top: 0; z-index: 999;">
+                              <tr>
+                                  <th style="position: sticky; top: 0; background: #050a0f; color: var(--neon-cyan); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-cyan); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">POS</th>
+                                  <th style="position: sticky; top: 0; background: #050a0f; color: var(--neon-cyan); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-cyan); text-align: left; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">PILOT</th>
+                                  <th style="position: sticky; top: 0; background: #050a0f; color: var(--neon-cyan); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-cyan); text-align: left; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">${data.ranking.isPointsMode ? 'RACES' : 'LAST HEAT'}</th>
+                                  <th style="position: sticky; top: 0; background: #050a0f; color: var(--neon-cyan); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-cyan); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">LAPS</th>
+                                  <th style="position: sticky; top: 0; background: #050a0f; color: var(--neon-cyan); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-cyan); text-align: right; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">${data.ranking.isPointsMode ? 'TOTAL PT' : 'TIME'}</th>
+                              </tr>
+                          </thead>
+                          <tbody>${rowsHtml || '<tr><td colspan="5" style="text-align:center; padding: 80px; color: #555; font-size: 30px;">[ NO COMPLETED TOURNAMENT DATA ]</td></tr>'}</tbody>
+                      </table>
+                  </div>
+              </div>
+          `;
+      },
+
+      renderSeriesView: function(data) {
+          document.getElementById('svSysTitle').innerText = data.sysTitle;
+          
+          const mainArea = document.querySelector('.sv-main');
+          
+          if (!data.seriesData) {
+              document.getElementById('svHeatName').innerText = "🎖 SERIES CHAMPIONSHIP";
+              mainArea.innerHTML = `<div style="flex:1; display:flex; align-items:center; justify-content:center; color:#555; font-size:50px; font-family:'Orbitron'; background:rgba(0,0,0,0.8); border:2px solid #333; border-radius:8px;">[ NO SERIES SELECTED ]</div>`;
+              return;
+          }
+
+          document.getElementById('svHeatName').innerText = `🎖 ${data.seriesData.name}`;
+
+          let rowsHtml = '';
+          data.ranking.forEach((r, idx) => {
+              let pos = idx + 1;
+              let trClass = pos === 1 ? 'rank-1' : pos === 2 ? 'rank-2' : pos === 3 ? 'rank-3' : '';
+              let iconUrl = data.icons[r.name] || data.icons[sanitizeFilename(r.name)] || `https://api.dicebear.com/8.x/bottts/png?seed=${encodeURIComponent(r.name)}&backgroundColor=111111,1a1a1a,050505&size=128`;
+rowsHtml += `
+                  <tr class="${trClass}">
+                      <td style="padding: 15px 30px; font-family: 'Orbitron'; font-size: 28px; text-align: center; width: 80px; border-bottom: 1px solid rgba(0, 255, 0, 0.2);">${pos}</td>
+                      <td style="padding: 15px 10px; border-bottom: 1px solid rgba(0, 255, 0, 0.2);">
+                          <div style="display: flex; align-items: center; gap: 20px;">
+                              <img src="${iconUrl}" style="width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--neon-green); background: #111;">
+                              <span style="font-size: 32px; font-weight: bold; color: ${pos === 1 ? 'inherit' : '#fff'};">${r.name}</span>
+                          </div>
+                      </td>
+                      <td style="padding: 15px 10px; text-align: center; font-size: 36px; font-weight: bold; color: ${pos === 1 ? 'inherit' : 'var(--neon-green)'}; border-bottom: 1px solid rgba(0, 255, 0, 0.2);">${r.validTotal}</td>
+                      <td style="padding: 15px 10px; text-align: center; font-size: 24px; color: ${pos === 1 ? 'inherit' : '#aaa'}; border-bottom: 1px solid rgba(0, 255, 0, 0.2);">${r.overallTotal}</td>
+                      <td style="padding: 15px 10px; text-align: center; font-size: 24px; border-bottom: 1px solid rgba(0, 255, 0, 0.2);">${r.bestPos}</td>
+                      <td style="padding: 15px 10px; text-align: center; font-size: 24px; border-bottom: 1px solid rgba(0, 255, 0, 0.2);">${r.wins}</td>
+                      <td style="padding: 15px 30px; text-align: center; font-size: 24px; border-bottom: 1px solid rgba(0, 255, 0, 0.2);">${r.entries}</td>
+                  </tr>
+              `;
+          });
+
+          mainArea.innerHTML = `
+              <div style="flex:1; background:linear-gradient(180deg, rgba(5,20,5,0.9), rgba(5,10,5,0.95)); border:2px solid var(--neon-green); border-radius:8px; display:flex; flex-direction:column; box-shadow:inset 0 0 50px rgba(0,255,0,0.1), 0 10px 40px rgba(0,0,0,0.8); overflow:hidden; isolation: isolate;">
+                  <div style="text-align: center; padding: 30px 30px 20px 30px; background: #050f05; z-index: 1000; position: relative; border-bottom: 1px solid var(--neon-green);">
+                      <div style="font-family: 'Share Tech Mono'; font-size: 24px; color: #aaa; margin-bottom: 10px; letter-spacing: 2px;">
+                          PROGRESS: ROUND ${data.seriesData.currentRound} / ${data.seriesData.totalRounds} <span style="margin: 0 15px;">|</span> VALID RULE: TOP ${data.seriesData.validRounds}
+                      </div>
+                      <div style="width: 80%; height: 12px; background: #111; margin: 0 auto; border-radius: 6px; border: 1px solid #333; overflow: hidden; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);">
+                          <div style="height: 100%; width: ${(data.seriesData.currentRound / data.seriesData.totalRounds) * 100}%; background: linear-gradient(90deg, #008800, var(--neon-green)); box-shadow: 0 0 15px var(--neon-green);"></div>
+                      </div>
+                  </div>
+                  <div style="flex:1; overflow-y:auto; padding: 0 20px;">
+                      <table style="width: 100%; border-collapse: separate; border-spacing: 0; padding-bottom: 30px;">
+                          <thead style="position: sticky; top: 0; z-index: 999;">
+                              <tr>
+                                  <th style="position: sticky; top: 0; background: #050f05; color: var(--neon-green); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-green); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">POS</th>
+                                  <th style="position: sticky; top: 0; background: #050f05; color: var(--neon-green); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-green); text-align: left; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">PILOT</th>
+                                  <th style="position: sticky; top: 0; background: #050f05; color: var(--neon-green); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-green); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">VALID PT</th>
+                                  <th style="position: sticky; top: 0; background: #050f05; color: var(--neon-green); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-green); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">TOTAL PT</th>
+                                  <th style="position: sticky; top: 0; background: #050f05; color: var(--neon-green); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-green); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">BEST POS</th>
+                                  <th style="position: sticky; top: 0; background: #050f05; color: var(--neon-green); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-green); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">WINS</th>
+                                  <th style="position: sticky; top: 0; background: #050f05; color: var(--neon-green); font-family: 'Orbitron'; font-size: 22px; padding: 15px 10px; border-bottom: 3px solid var(--neon-green); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.8); z-index: 999;">ENTRIES</th>
+                              </tr>
+                          </thead>
+                          <tbody>${rowsHtml || '<tr><td colspan="7" style="text-align:center; padding: 80px; color: #555; font-size: 30px;">[ NO DATA IN THIS SERIES ]</td></tr>'}</tbody>
+                      </table>
+                  </div>
+              </div>
+          `;
+      },
+
+      render: function(data) {
+          document.getElementById('svSysTitle').innerText = data.sysTitle;
+          document.getElementById('svHeatName').innerText = data.heatName;
+          
+          const mainArea = document.querySelector('.sv-main');
+          // ⚡ 修正: 他のビュー（OVERALL等）によって基本レイアウトが上書き消去されていた場合、HTML枠組みを復元する
+          if (!document.getElementById('svLeaderboard')) {
+              mainArea.innerHTML = `
+                  <div class="sv-leaderboard" id="svLeaderboard"></div>
+                  <div class="sv-timeline">
+                     <h3 style="color:var(--neon-cyan); font-family:'Orbitron'; font-size:28px; margin:0 0 20px 0; border-bottom:2px dashed var(--neon-cyan); padding-bottom:15px; letter-spacing:2px;">⚡ EVENT TIMELINE</h3>
+                     <div id="svTimelineFeed" style="flex:1; overflow:hidden; display:flex; flex-direction:column; gap:10px;"></div>
+                  </div>
+              `;
+          }
+          
+          const lb = document.getElementById('svLeaderboard');
+          lb.innerHTML = '';
+          
+          let topTimeMs = Infinity;
+          const validPilots = data.results.filter(r => !r.isPlaceholder && !r.isDSQ);
+          if (validPilots.length > 0 && validPilots[0].timeMs !== null && validPilots[0].timeMs !== 99999999) {
+              topTimeMs = validPilots[0].timeMs;
+          }
+          
+          validPilots.forEach((r, idx) => {
+              const pos = idx + 1;
+              let rankClass = pos === 1 ? 'rank-1' : pos === 2 ? 'rank-2' : pos === 3 ? 'rank-3' : '';
+              let customStyle = ""; 
+              
+              let gapText = "";
+              let totalTimeText = r.timeStr;
+              let gapPercent = 100;
+              let subInfoHtml = "";
+              
+              // ⚡ 状態に応じたテキスト・カラー・順位の変更ロジック
+              if (data.status === 'WAITING') {
+                  rankClass = ''; // 待機中は王冠エフェクトを外す
+                  let bandText = (r.originalData && r.originalData.band) ? r.originalData.band : "AUTO";
+                  let bColor = r.bandColor || 'var(--neon-cyan)'; 
+                  gapPercent = 0; 
+                  totalTimeText = "STANDBY"; 
+                  subInfoHtml = `<span style="color:#aaa;">BAND:</span> <span style="color:${bColor}; font-size:24px; font-weight:bold; letter-spacing:2px; text-shadow:0 0 10px ${bColor};">CH ${bandText}</span>`;
+                  // ⚡ カードの左端ボーダーと影をカメラ枠の色に発光させる
+                  customStyle = `border-left-color: ${bColor} !important; box-shadow: -5px 0 15px ${bColor}44, 0 10px 30px rgba(0,0,0,0.8);`; 
+              } else if (r.isDNF) {
+                  gapText = "DNF"; gapPercent = 0;
+                  subInfoHtml = `LAPS: <span style="color:#fff;">${r.laps}</span><span style="color:#555; margin:0 8px;">|</span>GAP: <span style="color:var(--neon-yellow);">${gapText}</span>`;
+              } else if (pos === 1) {
+                  gapText = "LEADER"; gapPercent = 100;
+                  subInfoHtml = `LAPS: <span style="color:#fff;">${r.laps}</span><span style="color:#555; margin:0 8px;">|</span>GAP: <span style="color:var(--neon-yellow);">${gapText}</span>`;
+              } else if (topTimeMs !== Infinity && r.timeMs !== null && r.timeMs !== 99999999) {
+                  const diffSec = (r.timeMs - topTimeMs) / 1000;
+                  gapText = `+${diffSec.toFixed(3)}`;
+                  gapPercent = Math.max(0, 100 - (diffSec * 10)); 
+                  subInfoHtml = `LAPS: <span style="color:#fff;">${r.laps}</span><span style="color:#555; margin:0 8px;">|</span>GAP: <span style="color:var(--neon-yellow);">${gapText}</span>`;
+              } else {
+                  gapText = "---"; gapPercent = 0;
+                  subInfoHtml = `LAPS: <span style="color:#fff;">${r.laps}</span><span style="color:#555; margin:0 8px;">|</span>GAP: <span style="color:var(--neon-yellow);">${gapText}</span>`;
+              }
+              
+              // Base64圧縮アイコンの適用
+              let iconUrl = `https://api.dicebear.com/8.x/bottts/png?seed=${encodeURIComponent(r.displayName)}&backgroundColor=111111,1a1a1a,050505&size=128`;
+              if (data.icons && data.icons[r.displayName]) {
+                  iconUrl = data.icons[r.displayName];
+              }
+              
+              // ⚡ 左側の数字: 待機中は「枠番号(1〜4)」、レース開始後は「順位(1〜)」
+              let displayPos = data.status === 'WAITING' ? (r.originalIndex + 1) : pos;
+
+              lb.innerHTML += `
+                  <div class="sv-pilot-card ${rankClass}" style="${customStyle}">
+                      <div class="sv-gap-bar" style="width: ${gapPercent}%;"></div>
+                      <div style="display:flex; align-items:center; gap:25px; z-index:2;">
+                          <div style="font-family:'Orbitron'; font-size:45px; font-weight:bold; color:#888; width:55px; text-align:center;">${displayPos}</div>
+                          <img src="${iconUrl}" style="width:80px; height:80px; border-radius:50%; background:#111; border:3px solid #444; object-fit:cover;">
+                          <div style="font-size:42px; font-weight:bold; color:#fff; letter-spacing:2px;">${r.displayName}</div>
+                      </div>
+                      <div style="display:flex; flex-direction:column; align-items:flex-end; z-index:2;">
+                          <div style="font-family:'Orbitron'; font-size:18px; color:var(--neon-cyan); margin-bottom:-5px; letter-spacing:1px;">${subInfoHtml}</div>
+                          <div style="font-family:'Share Tech Mono'; font-size:55px; font-weight:bold; color:#fff; line-height:1; text-shadow:0 0 10px rgba(255,255,255,0.3);">${totalTimeText}</div>
+                      </div>
+                  </div>
+              `;
+          });
+          
+          // ⚡ 修正: 右パネルをヒートの状態（待機/レース/結果）に合わせて劇的に変化させる
+          const rightPanel = document.querySelector('.sv-timeline');
+          
+          if (data.status === 'WAITING') {
+              // 📊 [1. 待機中] PILOT CONTEXT (戦績と文脈)
+              let contextHtml = `<h3 style="color:var(--neon-cyan); font-family:'Orbitron'; font-size:28px; margin:0 0 20px 0; border-bottom:2px dashed var(--neon-cyan); padding-bottom:15px; letter-spacing:2px;">📊 PILOT CONTEXT</h3><div style="flex:1; display:flex; flex-direction:column; gap:15px; justify-content:center;">`;
+              
+              validPilots.forEach(p => {
+                  const stat = data.overallStats ? data.overallStats.find(s => s.name === p.displayName) : null;
+                  const pColor = p.bandColor || 'var(--neon-cyan)';
+                  let info = "READY FOR BATTLE";
+                  
+                  // 総合ランキングのデータがあれば戦績を表示
+                  if (stat && stat.laps > 0) {
+                      info = `RANK: ${stat.pos} / LAPS: ${stat.laps} / SCORE: ${stat.time}`;
+                  }
+                  
+                  contextHtml += `
+                      <div style="background:linear-gradient(90deg, ${pColor}33, transparent); border-left:5px solid ${pColor}; padding:15px; border-radius:4px;">
+                          <div style="font-size:26px; font-weight:bold; color:#fff; font-family:'Orbitron'; letter-spacing:1px;">${p.displayName}</div>
+                          <div style="font-size:20px; color:var(--neon-yellow); margin-top:5px; font-family:'Share Tech Mono';">${info}</div>
+                      </div>`;
+              });
+              contextHtml += `</div>`;
+              rightPanel.innerHTML = contextHtml;
+              
+          } else {
+              // ⚡ [2 & 3. 走行中/終了後] LIVE TIMELINE & TOP MOMENTS
+              let titleText = data.status === 'COMPLETED' ? '🏆 TOP MOMENTS' : '⚡ LIVE TIMELINE';
+              let titleColor = data.status === 'COMPLETED' ? 'var(--neon-yellow)' : 'var(--neon-cyan)';
+              
+              let timelineHtml = `<h3 style="color:${titleColor}; font-family:'Orbitron'; font-size:28px; margin:0 0 20px 0; border-bottom:2px dashed ${titleColor}; padding-bottom:15px; letter-spacing:2px;">${titleText}</h3><div id="svTimelineFeed" style="flex:1; overflow:hidden; display:flex; flex-direction:column; gap:10px;">`;
+              
+              const filteredTimeline = data.timeline.filter(t => t.level >= 2);
+              if (filteredTimeline.length === 0) {
+                  timelineHtml += '<div style="color:#555; text-align:center; font-family:\'Orbitron\'; font-size:20px; margin-top:20px;">NO HIGHLIGHTS YET</div>';
+              } else {
+                  [...filteredTimeline].reverse().slice(0, 4).forEach(t => {
+                      const color = t.level === 3 ? 'var(--neon-pink)' : 'var(--neon-yellow)';
+                      
+                      // ⚡ 修正: パイロット名を大きく白文字で表示し、イベント内容は少し小さく色付きで改行表示する
+                      let pilotNameHtml = t.pilot !== 'SYSTEM' ? `<div style="color:#fff; font-size:26px; font-family:'Orbitron'; letter-spacing:1px; margin-bottom:4px;">${t.pilot}</div>` : '';
+                      let cleanMessage = t.message.replace(/\n/g, ' '); // ゴミの改行コードを安全に消去
+                      
+                      timelineHtml += `
+                          <div class="sv-timeline-item" style="color:${color}; font-weight:bold; background:rgba(0,0,0,0.4); padding:15px; border-radius:4px; border-left:4px solid ${color};">
+                              <div class="sv-timeline-time" style="color:#aaa; font-size:18px;">${t.timestamp}</div>
+                              <div class="sv-timeline-msg" style="flex:1;">
+                                  ${pilotNameHtml}
+                                  <div style="font-size:20px;">${cleanMessage}</div>
+                              </div>
+                          </div>`;
+                  });
+              }
+              timelineHtml += `</div>`;
+              rightPanel.innerHTML = timelineHtml;
+          }
+      }
+  };
   const OBSManager = {
       obs: new OBSWebSocket(),
       isConnected: false,
       lastHighlightMsg: "", // 直近のモーメントテキストを保持
       
+      // ⚡ 追加: OBSのシーン制御用プロパティ
+      currentScene: 'Scene_TVP',           
+      sceneNameTVP: 'Scene_TVP',           // TVP本体を映しているシーン名
+      sceneNameShowView: 'Scene_ShowView', // SHOW VIEWを映しているシーン名
+      sceneNameNRD: 'Scene_NRD',           // NRD本体を映しているシーン名
+
       init: async function() {
           try {
-              await this.obs.connect('ws://localhost:4455');
+              // ⚡ 修正: 設定画面からパスワードを読み込み、ある場合は認証付きで接続する
+              const obsPassword = await loadSetting('obs_password') || "";
+              if (obsPassword) {
+                  await this.obs.connect('ws://127.0.0.1:4455', obsPassword);
+              } else {
+                  await this.obs.connect('ws://127.0.0.1:4455');
+              }
               this.isConnected = true;
               sysLog('OBS WebSocket Connected successfully.', 'info');
               
@@ -1237,12 +2012,10 @@
                   setTimeout(() => this.init(), 5000);
               });
 
-              // ⚡ 修正: NRD上で再生するため、絶対パスから「ファイル名」だけを切り出して記憶する
               this.obs.on('ReplayBufferSaved', (data) => {
                   const savedPath = data.savedReplayPath;
                   sysLog(`OBS Replay File Saved: ${savedPath}`, 'info');
                   
-                  // スラッシュまたはバックスラッシュで分割してファイル名だけを取得
                   const fileName = savedPath.split(/[/\\]/).pop();
                   
                   const activeHeat = TournamentManager.heats.find(h => h.status === 'ACTIVE');
@@ -1250,9 +2023,9 @@
                       if (!activeHeat.highlights) activeHeat.highlights = [];
                       activeHeat.highlights.push({
                           message: this.lastHighlightMsg || `HIGHLIGHT ${activeHeat.highlights.length + 1}`,
-                          fileName: fileName // ファイル名を保存
+                          fileName: fileName
                       });
-                      TournamentManager.renderBracket(); // UIを即座に更新
+                      TournamentManager.renderBracket();
                   }
               });
           } catch (error) {
@@ -1275,6 +2048,78 @@
               await this.obs.call('SaveReplayBuffer');
               sysLog('🎬 OBS Replay Buffer Triggered!', 'info');
           } catch (e) { sysLog(`OBS SaveReplayBuffer Error: ${e.message}`, 'warn'); }
+      },
+
+      // ⚡ 修正: 録画はTVPで固定し、プロジェクター出力(Preview)だけを切り替える
+      switchScene: async function(targetScene) {
+          if (!this.isConnected) {
+              sysLog('OBS is not connected. Cannot switch scene.', 'warn');
+              return;
+          }
+          try {
+              await this.obs.call('SetCurrentPreviewScene', { sceneName: targetScene });
+              sysLog(`OBS Preview Scene switched to: ${targetScene}`, 'info');
+              this.currentScene = targetScene;
+              this.updateSceneUI();
+          } catch (e) {
+              sysLog(`OBS Scene Switch Error: ${e.message} (※スタジオモードがONになっているか確認してください)`, 'error');
+          }
+      },
+      
+      // ⚡ 修正: シーンのトグル（TVP → SHOW VIEW → NRD MAIN の順でループ）
+      toggleScene: function() {
+          let nextScene;
+          if (this.currentScene === this.sceneNameTVP) nextScene = this.sceneNameShowView;
+          else if (this.currentScene === this.sceneNameShowView) nextScene = this.sceneNameNRD;
+          else nextScene = this.sceneNameTVP;
+          this.switchScene(nextScene);
+      },
+      
+      // ⚡ 修正: アクティブな出力を「🔴 ON AIR」風に点滅させる（TVPボタン対応）
+      updateSceneUI: function() {
+          const btnTvp = document.getElementById('btnObsTvp');
+          const btnShow = document.getElementById('btnObsShowView');
+          const btnNrd = document.getElementById('btnObsNrd');
+          if (!btnShow || !btnNrd) return; 
+          
+          if (!document.getElementById('obsLiveStyle')) {
+              const style = document.createElement('style');
+              style.id = 'obsLiveStyle';
+              style.innerHTML = `
+                  @keyframes obs-live-blink {
+                      0% { background-color: var(--neon-pink); box-shadow: 0 0 20px var(--neon-pink); color: #000; }
+                      50% { background-color: #660011; box-shadow: 0 0 5px var(--neon-pink); color: #fff; }
+                      100% { background-color: var(--neon-pink); box-shadow: 0 0 20px var(--neon-pink); color: #000; }
+                  }
+                  .btn-obs-live { animation: obs-live-blink 1.2s infinite !important; border-color: var(--neon-pink) !important; font-weight: 900 !important; }
+              `;
+              document.head.appendChild(style);
+          }
+
+          if (btnTvp) {
+              btnTvp.classList.remove('btn-obs-live');
+              btnTvp.style.color = "#aaa";
+              btnTvp.innerHTML = '⏱ TVP <span class="shortcut-key">[T]</span>';
+          }
+
+          btnShow.classList.remove('btn-obs-live');
+          btnShow.style.color = "var(--neon-yellow)";
+          btnShow.innerHTML = '📺 SHOW VIEW <span class="shortcut-key">[T]</span>';
+
+          btnNrd.classList.remove('btn-obs-live');
+          btnNrd.style.color = "var(--neon-cyan)";
+          btnNrd.innerHTML = '💻 NRD MAIN <span class="shortcut-key">[T]</span>';
+
+          if (this.currentScene === this.sceneNameTVP && btnTvp) {
+              btnTvp.innerHTML = '🔴 TVP <span class="shortcut-key" style="color:inherit;">[T]</span>';
+              btnTvp.classList.add('btn-obs-live');
+          } else if (this.currentScene === this.sceneNameShowView) {
+              btnShow.innerHTML = '🔴 SHOW VIEW <span class="shortcut-key" style="color:inherit;">[T]</span>';
+              btnShow.classList.add('btn-obs-live');
+          } else {
+              btnNrd.innerHTML = '🔴 NRD MAIN <span class="shortcut-key" style="color:inherit;">[T]</span>';
+              btnNrd.classList.add('btn-obs-live');
+          }
       }
   };
 
@@ -1567,6 +2412,22 @@
       rankContainer.className = 'ranking-container mode-overall' + hiddenClass;
       document.getElementById('boardSeries').style.display = 'block';
       SeriesManager.renderSeriesView();
+    }
+
+    // ----------------------------------------------------------
+    // ⚡ 修正: DUAL/BEST/RACE選択時はSHOW VIEWにもランキングを表示し、BRACKET選択時のみ基本画面にする
+    // ----------------------------------------------------------
+    if (typeof ShowViewManager !== 'undefined') {
+        const sysTitle = document.getElementById('sysTitleInput') ? document.getElementById('sysTitleInput').value : "WTW SHIZUOKA";
+        if (mode === 'dual' || mode === 'best' || mode === 'race') {
+            ShowViewManager.broadcastRanking(sysTitle, mode);
+        } else if (mode === 'bracket') {
+            ShowViewManager.broadcastBracket(sysTitle);
+        } else if (mode === 'overall') {
+            ShowViewManager.broadcastOverall(sysTitle);
+        } else if (mode === 'series') {
+            ShowViewManager.broadcastSeries(sysTitle);
+        }
     }
   }
 
@@ -1894,15 +2755,14 @@
         }
 
         let iconUrl = iconCache[pName] || iconCache[sanitizeFilename(pName)];
-        if (!iconUrl && defaultIconUrl) iconUrl = defaultIconUrl; 
-
-        if (iconUrl) {
-            iconContainer.innerHTML = `<img src="${iconUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-            iconContainer.className = '';
-        } else {
-            iconContainer.innerHTML = '?';
-            iconContainer.className = 'pilot-icon-fallback';
+        // ⚡ 修正: メカ・ロボット風の「bottts」スタイルを適用
+        if (!iconUrl) {
+            iconUrl = `https://api.dicebear.com/8.x/bottts/png?seed=${encodeURIComponent(pName)}&backgroundColor=111111,1a1a1a,050505&size=256`;
+            ensurePilotIcon(pName); // ⚡ 裏側でフォルダにPNGとして保存
         }
+
+        iconContainer.innerHTML = `<img src="${iconUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; background-color: #eee;">`;
+        iconContainer.className = '';
     },
 
     renderSeriesView: function() {
@@ -2145,10 +3005,34 @@
     isAutoReplayEnabled: false,
     liveEventTimerId: null,
 
+    // ----------------------------------------------------------
+    // ⚡ 追加: EVENT ENGINE - タイムライン記録モジュール
+    // ----------------------------------------------------------
+    recordTimelineEvent: function(heat, type, level, pilot, message) {
+        if (!heat || !heat.activationTime) return;
+        if (!heat.timeline) heat.timeline = [];
+        
+        const elapsedMs = Date.now() - heat.activationTime;
+        const timestampStr = msToTimeStr(elapsedMs); // 経過時間を文字列化 (例: 01:23.45)
+        
+        heat.timeline.push({
+            elapsedMs: elapsedMs,
+            timestamp: timestampStr,
+            type: type,       // 'START', 'FINISH', 'LAP', 'FASTEST', 'OVERTAKE', 'CRASH', 'DELETE'
+            level: level,     // 1: 通常, 2: 重要, 3: 超重要(ハイライト確定)
+            pilot: pilot,     // 関連するパイロット名（システム全体の場合は 'SYSTEM'）
+            message: message  // イベント内容のテキスト
+        });
+        
+        // （※将来的にここでSHOW VIEWやLIVE VIEWERへの即時Push処理を分岐させます）
+    },
+
     // ⚡ 追加: オートタイマー管理用変数
     isAutoNextEnabled: false,
     isAutoFinishEnabled: false, // ⚡ 追加: 自動確定フラグ
     isFullAutoEnabled: false,   // ⚡ 追加: フルオートモードフラグ
+    isEndlessLoopEnabled: false, // ⚡ 追加: プラクティス用無限ループフラグ
+    loopCounter: 1,              // ⚡ 追加: ループ回数
     autoNextTimerId: null,
     autoNextHeatId: null,
     autoNextRemaining: 0,
@@ -2296,9 +3180,15 @@
       // ⚡ 変更後にコンフリクトが解消されていればソートして再描画
       let sorted = this.checkAndSortHeatPilots(this.heats[heatIdx]);
       if (sorted) {
-          this.renderBracket();
+          this.renderBracket(); // renderBracketの中でSHOW VIEWにもブロードキャストされます
       } else {
           this.refreshHeatBandUI(heatIdx);
+          // ⚡ 追加: 並び替えが起きなくても、SHOW VIEW(別ウィンドウ)へ最新の周波数を即時ブロードキャストする
+          const activeHeatForShow = this.heats.find(h => h.status === 'ACTIVE') || this.heats.find(h => h.status === 'WAITING');
+          if (activeHeatForShow && activeHeatForShow.id === this.heats[heatIdx].id) {
+              const sysTitle = document.getElementById('sysTitleInput') ? document.getElementById('sysTitleInput').value : "WTW SHIZUOKA";
+              ShowViewManager.broadcastState(activeHeatForShow, sysTitle);
+          }
       }
       this.autoSave('Pilot Frequency Manual Changed');
       this.syncLiveViewer(); // ⚡ Viewerにも即時反映
@@ -2318,7 +3208,8 @@
         snapshotBest: snapshotData_Best,
         snapshotRace: snapshotData_Race,
         heats: this.heats,
-        globalCounter: this.globalHeatCounter
+        globalCounter: this.globalHeatCounter,
+        draftHeats: this.draftHeats // ⚡ 追加: ループの雛形となるドラフトデータも保存する
       };
       
       let recoveryList = await loadSetting('recovery_list') || {};
@@ -2456,6 +3347,7 @@
         snapshotData_Race = state.snapshotRace || {};
         this.heats = state.heats || [];
         this.globalHeatCounter = state.globalCounter || 1;
+        this.draftHeats = state.draftHeats || []; // ⚡ 追加: リロード時もループの雛形を復元させる
         document.getElementById('tournamentNameInput').value = state.tournamentName || "WTW CHAMPIONSHIP";
         
         if (state.date) {
@@ -2688,8 +3580,12 @@
       ranking.forEach((r, index) => {
           let trClass = r.pos === 1 ? 'rank-1' : r.pos === 2 ? 'rank-2' : r.pos === 3 ? 'rank-3' : '';
           let iconUrl = iconCache[r.name] || iconCache[sanitizeFilename(r.name)];
-          if (!iconUrl && defaultIconUrl) iconUrl = defaultIconUrl; 
-          const iconHtml = iconUrl ? `<img src="${iconUrl}" class="pilot-icon" alt="">` : `<div class="pilot-icon-fallback">?</div>`;
+          // ⚡ 修正: メカ・ロボット風の「bottts」スタイルを適用
+          if (!iconUrl) {
+              iconUrl = `https://api.dicebear.com/8.x/bottts/png?seed=${encodeURIComponent(r.name)}&backgroundColor=111111,1a1a1a,050505&size=256`;
+              ensurePilotIcon(r.name); // ⚡ 裏側でフォルダにPNGとして保存
+          }
+          const iconHtml = `<img src="${iconUrl}" class="pilot-icon" alt="" style="background-color: #eee;">`;
           let timeDisplay = r.time === "DNF" ? `<span style="color:var(--neon-pink);">DNF</span>` : r.time;
 
           const tr = document.createElement('tr'); if (trClass) tr.className = trClass;
@@ -3353,8 +4249,8 @@
                 }
 
                 // ⚡ 修正: targetSecs をヒートのデータ構造に含める
-                this.heats.push({ id: `H${this.globalHeatCounter++}`, round: "DRAFT", name: dh.name, pilots: mappedPilots, targetLaps: targetLapsVal, targetSecs: targetSecsVal, status: "WAITING", results: [], activationTime: null });
-            });
+            this.heats.push({ id: `H${this.globalHeatCounter++}`, round: "DRAFT", name: dh.name, pilots: mappedPilots, targetLaps: targetLapsVal, targetSecs: targetSecsVal, status: "WAITING", results: [], timeline: [], activationTime: null });
+        });
             document.getElementById('directorModal').style.display = 'none'; document.getElementById('btnViewBracket').click();
             this.renderBracket(); this.autoSave('Bracket Published'); sysLog(`Tournament Published (Laps: ${targetLapsVal}, Secs: ${targetSecsVal})`);
         }
@@ -3387,8 +4283,8 @@
                 }
 
                 // ⚡ 修正: targetSecs をヒートのデータ構造に含める
-                this.heats.push({ id: `H${this.globalHeatCounter++}`, round: "DRAFT", name: dh.name, pilots: mappedPilots, targetLaps: targetLapsVal, targetSecs: targetSecsVal, status: "WAITING", results: [], activationTime: null });
-            });
+            this.heats.push({ id: `H${this.globalHeatCounter++}`, round: "DRAFT", name: dh.name, pilots: mappedPilots, targetLaps: targetLapsVal, targetSecs: targetSecsVal, status: "WAITING", results: [], timeline: [], activationTime: null });
+        });
             
             document.getElementById('directorModal').style.display = 'none'; 
             document.getElementById('btnViewBracket').click();
@@ -3397,6 +4293,39 @@
             this.autoSave('Bracket Appended (Okawari)'); 
             sysLog(`Tournament Appended (Laps: ${targetLapsVal}, Secs: ${targetSecsVal})`);
         }
+    },
+
+    // ----------------------------------------------------------
+    // ⚡ 追加: プラクティス無限ループ用 ダイアログなしの裏側自動追加処理
+    // ----------------------------------------------------------
+    appendDraftToLiveSilent: function() {
+        let targetLapsVal = parseInt(document.getElementById('dirTargetLaps').value, 10) || 3;
+        let targetSecsVal = parseInt(document.getElementById('dirTargetSecs').value, 10) || 180; 
+        const perHeat = parseInt(document.getElementById('dirPerHeat').value, 10) || 4; 
+
+        this.draftHeats.forEach(dh => {
+            let mappedPilots = dh.pilots.filter(p => p !== "").map(p => {
+                let pilotData = { name: "", sourceDesc: p };
+                const matchHeat = p.match(/^(.+)\s*の\s*(\d+)位$/); const matchQual = p.match(/^(?:予選|シリーズ|総合)\s*\d+位\s*\((.+)\)$/);
+                if (matchHeat) { pilotData.sourceHeatName = matchHeat[1].trim(); pilotData.sourceRank = parseInt(matchHeat[2], 10); } 
+                else if (matchQual) { pilotData.name = matchQual[1].trim(); } 
+                else { pilotData.name = p.trim(); }
+                return pilotData;
+            });
+            
+            while (mappedPilots.length < perHeat) {
+                mappedPilots.push({ name: "EMPTY", sourceDesc: "EMPTY" });
+            }
+
+            // ヒート名にループ番号を付与して重複を避ける (例: GROUP A (L2))
+            let newHeatName = `${dh.name} (L${this.loopCounter})`;
+            // ⚡ 修正: timeline: [] を追加し、イベントエラーを防ぐ
+            this.heats.push({ id: `H${this.globalHeatCounter++}`, round: "DRAFT", name: newHeatName, pilots: mappedPilots, targetLaps: targetLapsVal, targetSecs: targetSecsVal, status: "WAITING", results: [], timeline: [], activationTime: null });
+        });
+        
+        this.renderBracket(); 
+        this.autoSave('Bracket Appended (Endless Loop)'); 
+        sysLog(`Endless Loop Appended (Loop ${this.loopCounter})`);
     },
 
     // ⚡ 修正: TVPへ任意のコマンドとカメラ番号を発射するメソッド
@@ -3794,7 +4723,13 @@
     setActive: function(heatId) {
       this.heats.forEach(h => { if(h.status === 'ACTIVE') h.status = 'WAITING'; });
       let heat = this.heats.find(h => h.id === heatId);
-      if(heat) { heat.status = 'ACTIVE'; heat.activationTime = Date.now(); sysLog(`Heat ${heatId} is now ACTIVE. Activation time recorded.`); this.autoSave(`Heat Active: ${heat.name}`); }
+      if(heat) { 
+          heat.status = 'ACTIVE'; 
+          heat.activationTime = Date.now(); 
+          this.recordTimelineEvent(heat, 'START', 1, 'SYSTEM', '🟢 HEAT STARTED'); // ⚡ 追加: スタートイベントを記録
+          sysLog(`Heat ${heatId} is now ACTIVE. Activation time recorded.`); 
+          this.autoSave(`Heat Active: ${heat.name}`); 
+      }
       this.renderBracket();
     },
 
@@ -3844,6 +4779,7 @@
           return a.timeMs - b.timeMs;
       });
       heat.results = standings; heat.status = 'COMPLETED'; 
+      this.recordTimelineEvent(heat, 'FINISH', 1, 'SYSTEM', '🏁 HEAT FINISHED'); // ⚡ 追加: フィニッシュイベントを記録
       OBSManager.stopRecord(); // ⚡ 追加: ヒートがCOMPLETEDになった瞬間にOBS録画を自動停止
       
       let topPilots = standings.filter(s => !s.isPlaceholder && !s.isDNF).slice(0, 2);
@@ -3868,15 +4804,40 @@
           this.sendTVPCommand('close_result');
       }, 10000);
 
+      // ----------------------------------------------------------
+      // ⚡ 追加: 【Phase 3】 オートリプレイ機能の起動
+      // ----------------------------------------------------------
+      if (this.isAutoReplayEnabled && heat.highlights && heat.highlights.length > 0) {
+          const bestHighlight = heat.highlights[heat.highlights.length - 1]; // 一番最後(最新)の熱い瞬間を抽出
+          sysLog(`Auto Replay Triggered for: ${bestHighlight.message}`);
+          setTimeout(() => {
+              this.playHighlight(bestHighlight.fileName);
+          }, 1500); // 優勝セレモニー終了から1.5秒後に自動再生を開始
+      }
+
       let nextHeat = this.heats.find(h => h.status === 'WAITING');
+      let isJustLooped = false; // ⚡ 追加: ループ直後かどうかを判定するフラグ
+      
+      // ⚡ 追加: 次のWAITINGがない場合で、エンドレスループがONなら自動的におかわりを追加する
+      if (!nextHeat) {
+          if (this.isEndlessLoopEnabled && this.draftHeats && this.draftHeats.length > 0) {
+              this.loopCounter++;
+              sysLog(`Endless Loop triggered: Generating Loop ${this.loopCounter}...`);
+              this.appendDraftToLiveSilent(); // 裏側で自動追加
+              nextHeat = this.heats.find(h => h.status === 'WAITING'); // 追加された新しいヒートをキャッチ
+              isJustLooped = true; // ループ発動フラグを立てる
+          }
+      }
+
       if (!nextHeat) {
           setTimeout(async () => { if (await showCustomDialog("登録された全ヒートが終了しました。\n現在のランキングを予選結果としてスナップショット保存し、本戦に向けてデータをリセットしますか？\n（※エキシビジョンやテスト走行の場合はキャンセルしてください）", true)) document.getElementById('btnSnapshotReset').click(); }, 500);
       } else {
-          // ⚡ 追加: ヒート名から「HEAT 1」や「H2」などの番号部分を削ったベース名（ステージ名）を取得
-          let getBaseName = (name) => name.replace(/(?:\s-\s)?(?:HEAT\s|H|MATCH|R\d+[-H]*)\d*$/i, '').trim();
+          // ⚡ 修正: ヒート名から番号部分に加え、ループ回数(L2等)も削ったベース名（ステージ名）を取得する
+          let getBaseName = (name) => name.replace(/(?:\s-\s)?(?:HEAT\s|H|MATCH|R\d+[-H]*)\d*$/i, '').replace(/\s*\(L\d+\)$/i, '').trim();
           let isStageChanged = getBaseName(heat.name) !== getBaseName(nextHeat.name);
 
-          if (isStageChanged && !this.isFullAutoEnabled) {
+          // ⚡ 修正: ループ追加直後はステージ変更とみなさず、待機させずにシームレスにカウントダウンを進行させる
+          if (isStageChanged && !this.isFullAutoEnabled && !isJustLooped) {
              // ⚡ 通常時：ステージが変わる場合のみ、音声を鳴らして待機する
              sysLog(`Stage Changed from "${heat.name}" to "${nextHeat.name}". Interval triggered.`);
              SoundManager.triggerDucking();
@@ -3978,6 +4939,7 @@
 
         heat.status = 'WAITING';
         heat.results = [];
+        heat.timeline = []; // ⚡ 追加: やり直しの場合はタイムライン（歴史）も完全に白紙に戻す
         heat.measurementFinished = false; // ⚡ 修正: 計測終了フラグも初期状態(false)にリセットする
         heat._autoFinishTriggered = false; // ⚡ 念のためオートフィニッシュの発火フラグもリセット
         
@@ -4246,6 +5208,13 @@
 
       // ⚡ 追加: 手動トリガー用コンソールの更新
       this.updateLapTriggerConsole();
+
+      // ⚡ 追加: SHOW VIEW (観客用別ウィンドウ) へ最新状態をブロードキャスト送信
+      const activeHeatForShow = this.heats.find(h => h.status === 'ACTIVE') || this.heats.find(h => h.status === 'WAITING');
+      if (activeHeatForShow) {
+          const sysTitle = document.getElementById('sysTitleInput') ? document.getElementById('sysTitleInput').value : "WTW SHIZUOKA";
+          ShowViewManager.broadcastState(activeHeatForShow, sysTitle);
+      }
     }, // ←★ここにカンマが必要です
 
     // ⚡ 追加: 横並びの手動トリガーコンソールを生成・更新する処理
@@ -4409,10 +5378,15 @@
             const lapData = eventJson.lapUpdate; 
             if (!lapData) return;
             
-            // 現在の最新ランキングを取得
             const currentStandings = this.getRealtimeStandings(activeHeat);
+            let formattedTime = Number(lapData.lapTimeSec).toFixed(2);
+            let rankNum = currentStandings.findIndex(s => s.displayName === lapData.pilot) + 1;
             
-            // 1. ベストラップ判定（今ヒート中のトップタイムかどうか）
+            // 【通常ラップイベントの記録 (Level 1)】
+            let baseMsg = `L${lapData.lapNum} | ${formattedTime}s (P${rankNum})`;
+            this.recordTimelineEvent(activeHeat, 'LAP', 1, lapData.pilot, baseMsg);
+
+            // 1. ベストラップ判定
             let isFastestLap = false;
             if (lapData.lapTimeSec > 0) {
                 let heatBest = Infinity;
@@ -4428,56 +5402,150 @@
 
             // 2. オーバーテイク（順位逆転）判定
             let overtakeMsg = "";
-            let rankNum = currentStandings.findIndex(s => s.displayName === lapData.pilot) + 1;
-
+            let passedPilot = "";
             if (this.previousStandings.length > 0) {
                 const prevIdx = this.previousStandings.findIndex(s => s.displayName === lapData.pilot);
                 const currIdx = currentStandings.findIndex(s => s.displayName === lapData.pilot);
-                
-                // 直前の順位より上がっていればオーバーテイク！
                 if (prevIdx > currIdx && currIdx >= 0) {
-                    const passedPilot = this.previousStandings[currIdx].displayName;
-                    // EMPTYを抜いた場合は無視
+                    passedPilot = this.previousStandings[currIdx].displayName;
                     if (passedPilot !== "EMPTY" && passedPilot !== "No Pilot") {
-                        overtakeMsg = `${lapData.pilot} PASSED ${passedPilot}!!`;
+                        overtakeMsg = `PASSED ${passedPilot}!!`;
                     }
                 }
             }
             
-            // ⚡ 修正: 小数点以下2桁に丸めてフォーマットを整理
-            let formattedTime = Number(lapData.lapTimeSec).toFixed(2);
-            let momentMsg = `L${lapData.lapNum} | P${rankNum} ${lapData.pilot} | ${formattedTime}s`;
+            // 【MOMENTイベントの記録 (Level 2 or 3)】
             let isHighlight = false;
             let effectColor = "var(--neon-yellow)";
+            let displayMsg = "";
 
             if (isFastestLap) {
-                momentMsg = `⚡ FASTEST LAP!\n` + momentMsg;
+                // 暫定1位を出した場合やコースレコード級の場合はLevel 3にするなど、将来的な拡張が可能です
+                this.recordTimelineEvent(activeHeat, 'FASTEST', 2, lapData.pilot, `⚡ FASTEST LAP! (${formattedTime}s)`);
+                displayMsg = `⚡ FASTEST LAP!\n${lapData.pilot} | ${formattedTime}s`;
                 isHighlight = true;
                 effectColor = "var(--neon-cyan)";
             }
+            
             if (overtakeMsg) {
-                momentMsg = `🔥 OVERTAKE!\n` + overtakeMsg;
+                // 1位争いのオーバーテイクならLevel 3にする
+                let eventLevel = (rankNum === 1) ? 3 : 2; 
+                this.recordTimelineEvent(activeHeat, 'OVERTAKE', eventLevel, lapData.pilot, `🔥 OVERTOOK ${passedPilot} (Now P${rankNum})`);
+                displayMsg = `🔥 OVERTAKE!\n${lapData.pilot} ${overtakeMsg}`;
                 isHighlight = true;
                 effectColor = "var(--neon-pink)";
             }
             
-           // ⚡ ハイライトと判定された場合、専用のスマートなエフェクトとOBSトリガーを発動
+            // UIへのエフェクト描画とOBS保存トリガー
             if (isHighlight) {
-                triggerMomentEffect(momentMsg, effectColor); 
-                sysLog(`[RACE MOMENT] ${momentMsg.replace('\n', ' ')}`, 'info');
+                triggerMomentEffect(displayMsg, effectColor); 
+                ShowViewManager.broadcastMoment(displayMsg, effectColor); // ⚡ 追加: SHOW VIEW にもエフェクトを送信
+                sysLog(`[RACE MOMENT] ${displayMsg.replace('\n', ' ')}`, 'info');
                 
                 if (this.isAutoReplayEnabled) {
-                    // ⚡ 修正: OBSからの返信に紐付けるため、改行を抜いたテキストを渡す
-                    OBSManager.saveReplayBuffer(momentMsg.replace('\n', ' '));
+                    OBSManager.saveReplayBuffer(displayMsg.replace('\n', ' '));
                 }
             }
             
             this.previousStandings = currentStandings;
             
         } else if (eventJson.event === "lap_del") {
-            // ラップが取り消された場合は順位基準をリセット
+            // ⚡ 【ラップ削除イベントの記録 (Level 2)】
+            // 削除された事実も物語としてタイムラインに刻む
+            this.recordTimelineEvent(activeHeat, 'DELETE', 2, 'SYSTEM', `❌ LAP DELETED (Penalty/Fix)`);
             this.previousStandings = this.getRealtimeStandings(activeHeat);
         }
+    },
+
+    // ----------------------------------------------------------
+    // ⚡ 追加: 【Phase 4】 サマリー自動集計エンジン
+    // ----------------------------------------------------------
+    generateSummary: function() {
+        let summary = {
+            champion: "UNKNOWN",
+            podium: [], // ⚡ 追加: 表彰台3名分の配列
+            totalHeats: this.heats.length,
+            totalPilots: 0,
+            fastestLap: { pilot: "-", time: Infinity, timeStr: "-:-.-" },
+            mostOvertakes: { pilot: "-", count: 0 },
+            biggestComeback: { pilot: "-", up: 0 },
+            topMoment: { heatName: "-", message: "-" }
+        };
+        
+        let overall = this.getOverallRanking();
+        if(overall.length > 0) {
+            summary.champion = overall[0].name;
+            summary.totalPilots = overall.length;
+            // ⚡ 追加: 総合ランキングの上位3名を抽出
+            summary.podium = overall.slice(0, 3).map(p => p.name);
+        }
+
+        let overtakeStats = {};
+        let topMoments = [];
+
+        this.heats.forEach(h => {
+            if(h.status !== 'COMPLETED') return;
+            
+            // タイムラインからFASTESTとOVERTAKEを抽出
+            if (h.timeline) {
+                h.timeline.forEach(t => {
+                    if (t.type === 'FASTEST') {
+                        let match = t.message.match(/\(([\d\.]+s)\)/);
+                        if(match) {
+                            let timeVal = parseFloat(match[1]);
+                            if (timeVal < summary.fastestLap.time) {
+                                summary.fastestLap.time = timeVal;
+                                summary.fastestLap.timeStr = match[1];
+                                summary.fastestLap.pilot = t.pilot;
+                            }
+                        }
+                    }
+                    if (t.type === 'OVERTAKE') {
+                        if(!overtakeStats[t.pilot]) overtakeStats[t.pilot] = 0;
+                        overtakeStats[t.pilot]++;
+                    }
+                    if (t.level >= 2) {
+                        topMoments.push({ heatName: h.name, message: t.message, pilot: t.pilot, level: t.level });
+                    }
+                });
+            }
+            
+            // 下克上（スタート順位からどれだけ上がったか）を抽出
+            h.pilots.forEach((p, idx) => {
+                if(p.name && p.name !== "EMPTY" && p.name !== "No Pilot") {
+                    let resIdx = h.results.findIndex(r => r.displayName === p.name);
+                    if (resIdx !== -1) {
+                        let endPos = resIdx + 1;
+                        let startPos = idx + 1;
+                        let up = startPos - endPos;
+                        if (up > summary.biggestComeback.up) {
+                            summary.biggestComeback.up = up;
+                            summary.biggestComeback.pilot = p.name;
+                        }
+                    }
+                }
+            });
+        });
+
+        // 最多オーバーテイク賞の決定
+        let maxOvertakes = 0;
+        for(let p in overtakeStats) {
+            if(overtakeStats[p] > maxOvertakes) {
+                maxOvertakes = overtakeStats[p];
+                summary.mostOvertakes.pilot = p;
+                summary.mostOvertakes.count = maxOvertakes;
+            }
+        }
+
+        // トップモーメントの決定（レベルが最も高いもの、同率なら最新）
+        if (topMoments.length > 0) {
+            topMoments.sort((a, b) => a.level - b.level);
+            let best = topMoments[topMoments.length - 1];
+            summary.topMoment.heatName = best.heatName;
+            summary.topMoment.message = best.message.replace(/\n/g, ' / '); // 改行をスラッシュに変換して1行にする
+        }
+
+        return summary;
     },
 
     // ----------------------------------------------------------
@@ -4616,6 +5684,18 @@
   // 6. 残りのすべての処理 (DOM構築後実行)
   // ====================================================
   window.addEventListener('DOMContentLoaded', async () => {
+    // ⚡ 修正: URLに ?mode=show が付いている場合は SHOW VIEW モードで起動し、ここで処理を完全に切る
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'show') {
+        ShowViewManager.init();
+        return; // オペレーター用の重い処理（OBS、ファイル監視、IndexedDB等）を一切走らせない
+    }
+
+    // ⚡ 追加: オペレーター画面でボタンを押した時に別ウィンドウを開くリスナー
+    document.getElementById('btnOpenShowView')?.addEventListener('click', () => {
+        window.open(window.location.pathname + '?mode=show', 'NRD_SHOW_VIEW', 'width=1280,height=720');
+    });
+
     sysLog('System Boot Sequence Initiated...', 'info');
 
     const mainTitleEl = document.getElementById('mainTitle');
@@ -4644,6 +5724,16 @@
         await saveSetting('main_title', newTitle);
         sysLog(`Main title updated to: ${newTitle}`, 'info');
         await showCustomDialog('システム表示名を変更しました。', false);
+    });
+
+    // ⚡ 追加: OBSパスワードのロードと保存処理
+    const obsPwInput = document.getElementById('obsPasswordInput');
+    loadSetting('obs_password').then(pw => { if (pw && obsPwInput) obsPwInput.value = pw; });
+    document.getElementById('btnSaveObsPassword')?.addEventListener('click', async () => {
+        const newPw = obsPwInput.value.trim();
+        await saveSetting('obs_password', newPw);
+        sysLog('OBS Password updated in settings.', 'info');
+        await showCustomDialog('OBSのパスワードを保存しました。\n※設定を反映させるにはページをリロード（再読み込み）してください。', false);
     });
 
     rankContainer = document.getElementById('rankingContainer');
@@ -4758,6 +5848,26 @@
           });
       }
 
+      // ⚡ 追加: 無限ループ（プラクティス）モードのON/OFFイベント
+      const btnEndlessLoop = document.getElementById('btnToggleEndlessLoop');
+      if (btnEndlessLoop) {
+          btnEndlessLoop.addEventListener('click', (e) => {
+              TournamentManager.isEndlessLoopEnabled = !TournamentManager.isEndlessLoopEnabled;
+              if (TournamentManager.isEndlessLoopEnabled) {
+                  e.target.innerText = 'ON';
+                  e.target.classList.add('active-mode');
+                  e.target.style.color = '#b055ff';
+                  TournamentManager.loopCounter = 1; // ONにした時にカウントリセット
+                  sysLog('Practice Endless Loop Mode: ENABLED');
+              } else {
+                  e.target.innerText = 'OFF';
+                  e.target.classList.remove('active-mode');
+                  e.target.style.color = '';
+                  sysLog('Practice Endless Loop Mode: DISABLED');
+              }
+          });
+      }
+
       // ⚡ 追加: AUTO REPLAY ボタンのイベントリスナー
       const btnAutoReplay = document.getElementById('btnToggleAutoReplay');
       if (btnAutoReplay) {
@@ -4844,8 +5954,261 @@
       document.getElementById('btnInitIconDir').addEventListener('click', async () => { try { iconDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' }); await saveSetting('iconDirHandle', iconDirHandle); updateBootModuleStatus('btnInitIconDir', 'bootStatus_icon', 'var(--neon-cyan)'); } catch (e) {} });
       document.getElementById('btnInitBgmDir').addEventListener('click', async () => { try { bgmHandle = await window.showDirectoryPicker(); await saveSetting('bgmDirHandle', bgmHandle); updateBootModuleStatus('btnInitBgmDir', 'bootStatus_bgm', 'var(--neon-orange)'); } catch (e) {} });
       
-      // メインのIGNITIONボタン
-      document.getElementById('btnSystemBoot').addEventListener('click', () => { startSystem(false); });
+      // ⚡ 究極改修: メインのIGNITIONボタン
+      // 🏗️ HEAVY INDUSTRIAL BOOT SEQUENCE (カスタムオーディオ・タイムライン完全同期版)
+      document.getElementById('btnSystemBoot').addEventListener('click', async () => {
+
+          const btn = document.getElementById('btnSystemBoot');
+          const panel = document.getElementById('initPanel');
+
+          // ========================================================
+          // [ 0.0s ] IGNITION BUTTON LOCK & AUDIO PLAY
+          // ========================================================
+          btn.style.pointerEvents = 'none';
+          btn.innerText = "[ 🚀 SYSTEM BOOTING... ]";
+          btn.style.backgroundColor = "var(--neon-cyan)";
+          btn.style.color = "#000";
+          btn.style.boxShadow = "0 0 30px var(--neon-cyan)";
+          btn.style.transform = "scale(1.05)";
+
+          SoundManager.initContext();
+          
+          // 🔊 ユーザー作成のカスタム起動音（STARTUP）をここで一発鳴らす
+          // これ以降の演出は、この音声のタイムラインに合わせて自動進行する
+          SoundManager.play('startup');
+
+          // ========================================================
+          // [ 1.5s ] PROGRESS BAR START
+          // ========================================================
+          let barContainer, barFill;
+          setTimeout(() => {
+              barContainer = document.createElement('div');
+              barContainer.style.width = '80%'; barContainer.style.maxWidth = '600px';
+              barContainer.style.height = '6px';
+              barContainer.style.border = '1px solid var(--neon-cyan)';
+              barContainer.style.margin = '30px auto 0 auto';
+              barContainer.style.position = 'relative';
+              barContainer.style.boxShadow = '0 0 15px var(--neon-cyan)';
+
+              barFill = document.createElement('div');
+              barFill.style.width = '0%'; barFill.style.height = '100%';
+              barFill.style.backgroundColor = 'var(--neon-cyan)';
+              barFill.style.boxShadow = '0 0 10px #fff';
+              barFill.style.transition = 'width 3.4s cubic-bezier(0.1,0.8,0.3,1)'; // シャッター落下直前までゆっくりチャージ
+              barContainer.appendChild(barFill);
+              panel.appendChild(barContainer);
+
+              setTimeout(() => { barFill.style.width = '100%'; }, 50);
+          }, 1500);
+
+          // ========================================================
+          // [ 5.0s ] HEAVY INDUSTRIAL SHUTTER SEQUENCE
+          // ========================================================
+          setTimeout(() => {
+              
+              const armorColor = '#24282b';
+              const rivetColor = '#1a1c1e';
+
+              const shutterLayer = document.createElement('div');
+              shutterLayer.style.position = 'fixed'; shutterLayer.style.left = '0'; shutterLayer.style.top = '0';
+              shutterLayer.style.width = '100vw'; shutterLayer.style.height = '100vh';
+              shutterLayer.style.zIndex = '999999'; shutterLayer.style.pointerEvents = 'none';
+              shutterLayer.style.overflow = 'hidden';
+              document.body.appendChild(shutterLayer);
+
+              const applyMetalTexture = (el) => {
+                  el.style.background = `
+                      linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)),
+                      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px),
+                      ${armorColor}
+                  `;
+              };
+
+              const addRivets = (parent, isTop) => {
+                  const rivetCount = 10;
+                  for(let i = 1; i <= rivetCount; i++) {
+                      const rivet = document.createElement('div');
+                      rivet.style.position = 'absolute';
+                      rivet.style.width = '14px'; rivet.style.height = '14px';
+                      rivet.style.borderRadius = '50%';
+                      rivet.style.background = rivetColor;
+                      rivet.style.boxShadow = 'inset 1px 1px 2px rgba(255,255,255,0.1), inset -2px -2px 4px rgba(0,0,0,0.9), 2px 2px 5px rgba(0,0,0,0.8)';
+                      rivet.style.left = `${(100 / (rivetCount + 1)) * i}%`;
+                      if (isTop) rivet.style.bottom = '12px'; else rivet.style.top = '12px';
+                      parent.appendChild(rivet);
+                  }
+                  
+                  const corners = [
+                      { top: '30px', left: '30px' }, { top: '30px', right: '30px' },
+                      { bottom: '30px', left: '30px' }, { bottom: '30px', right: '30px' }
+                  ];
+                  corners.forEach(pos => {
+                      if (isTop && pos.bottom) return; 
+                      if (!isTop && pos.top) return; 
+                      const rivet = document.createElement('div');
+                      rivet.style.position = 'absolute';
+                      rivet.style.width = '24px'; rivet.style.height = '24px';
+                      rivet.style.borderRadius = '50%';
+                      rivet.style.background = rivetColor;
+                      rivet.style.boxShadow = 'inset 1px 1px 3px rgba(255,255,255,0.1), inset -2px -2px 5px rgba(0,0,0,0.9), 3px 3px 6px rgba(0,0,0,0.8)';
+                      Object.assign(rivet.style, pos);
+                      parent.appendChild(rivet);
+                  });
+              };
+
+              const logoStyle = `
+                  position: absolute;
+                  left: 50%;
+                  font-family: 'Orbitron', sans-serif;
+                  font-size: clamp(100px, 20vw, 250px);
+                  font-weight: 900;
+                  letter-spacing: 20px;
+                  color: #1e2225;
+                  text-shadow: 2px 2px 3px rgba(255,255,255,0.05), -2px -2px 4px rgba(0,0,0,0.9);
+                  white-space: nowrap;
+              `;
+
+              // --- 上部装甲シャッター ---
+              const shutterTop = document.createElement('div');
+              shutterTop.style.position = 'absolute'; shutterTop.style.left = '0'; shutterTop.style.top = '0';
+              shutterTop.style.width = '100%'; shutterTop.style.height = '50%';
+              applyMetalTexture(shutterTop);
+              shutterTop.style.borderBottom = '8px solid #080a0b'; 
+              shutterTop.style.borderLeft = '8px solid #3a4146';
+              shutterTop.style.borderRight = '8px solid #0d1012';
+              shutterTop.style.boxShadow = '0 30px 60px rgba(0,0,0,0.9)';
+              shutterTop.style.transform = 'translateY(-100%)';
+              // ⚡ 修正: GPUアクセラレーションを有効化し、落下時間を0.45sに伸ばして「質量」を出す
+              shutterTop.style.willChange = 'transform';
+              shutterTop.style.transition = 'transform 0.45s cubic-bezier(0.7, 0, 1, 1)';
+              shutterTop.style.overflow = 'hidden'; 
+              
+              const logoTop = document.createElement('div');
+              logoTop.style.cssText = logoStyle + `bottom: 0; transform: translate(-50%, 50%);`;
+              logoTop.innerText = 'N.R.D';
+              shutterTop.appendChild(logoTop);
+              
+              addRivets(shutterTop, true);
+              shutterLayer.appendChild(shutterTop);
+
+
+              // --- 下部装甲シャッター ---
+              const shutterBottom = document.createElement('div');
+              shutterBottom.style.position = 'absolute'; shutterBottom.style.left = '0'; shutterBottom.style.bottom = '0';
+              shutterBottom.style.width = '100%'; shutterBottom.style.height = '50%';
+              applyMetalTexture(shutterBottom);
+              shutterBottom.style.borderTop = '8px solid #080a0b';
+              shutterBottom.style.borderLeft = '8px solid #3a4146';
+              shutterBottom.style.borderRight = '8px solid #0d1012';
+              shutterBottom.style.boxShadow = '0 -30px 60px rgba(0,0,0,0.9)';
+              shutterBottom.style.transform = 'translateY(100%)';
+              // ⚡ 修正: GPUアクセラレーションを有効化
+              shutterBottom.style.willChange = 'transform';
+              shutterBottom.style.transition = 'transform 0.45s cubic-bezier(0.7, 0, 1, 1)';
+              shutterBottom.style.overflow = 'hidden'; 
+
+              const logoBottom = document.createElement('div');
+              logoBottom.style.cssText = logoStyle + `top: 0; transform: translate(-50%, -50%);`;
+              logoBottom.innerText = 'N.R.D';
+              shutterBottom.appendChild(logoBottom);
+              
+              addRivets(shutterBottom, false);
+              shutterLayer.appendChild(shutterBottom);
+
+              // ⚡ 修正: 強制リフロー処理。DOMを挿入した直後の描画スキップ（コマ落ち）を防止する
+              void shutterTop.offsetWidth;
+              void shutterBottom.offsetWidth;
+
+              // --------------------------------------------------------
+              // [ 5.0s ] シャッター落下開始
+              // --------------------------------------------------------
+              // ⚡ 修正: requestAnimationFrameではなく、50msの遅延を意図的に与えて描画を安定させる
+              setTimeout(() => {
+                  shutterTop.style.transform = 'translateY(0)';
+                  shutterBottom.style.transform = 'translateY(0)';
+              }, 50);
+
+              // --------------------------------------------------------
+              // [ 5.5s ] 衝突の瞬間 (落下時間を伸ばしたため、タイミングを500ms後に調整)
+              // --------------------------------------------------------
+              setTimeout(() => {
+                  
+                  let shakeCount = 0;
+                  const shakeInt = setInterval(() => {
+                      const intensity = 1 - (shakeCount / 15);
+                      const y = (Math.random() - 0.5) * 60 * intensity; 
+                      const x = (Math.random() - 0.5) * 15 * intensity;
+                      document.body.style.transform = `translate(${x}px, ${y}px)`;
+                      shakeCount++;
+                      if(shakeCount > 15) { clearInterval(shakeInt); document.body.style.transform = ''; }
+                  }, 20);
+
+                  const impactFlash = document.createElement('div');
+                  impactFlash.style.position = 'absolute'; impactFlash.style.top = '50%'; impactFlash.style.left = '0';
+                  impactFlash.style.width = '100%'; impactFlash.style.height = '15px';
+                  impactFlash.style.transform = 'translateY(-50%)'; impactFlash.style.background = '#fff';
+                  impactFlash.style.boxShadow = '0 0 50px #fff, 0 0 100px var(--neon-cyan)';
+                  impactFlash.style.opacity = '1'; impactFlash.style.transition = 'opacity 0.4s ease-out, transform 0.4s ease-out';
+                  shutterLayer.appendChild(impactFlash);
+                  
+                  requestAnimationFrame(() => {
+                      impactFlash.style.opacity = '0'; impactFlash.style.transform = 'translateY(-50%) scaleY(8)';
+                  });
+                  setTimeout(()=> impactFlash.remove(), 500);
+
+                  for(let i = 0; i < 40; i++) {
+                      const spark = document.createElement('div');
+                      spark.style.position = 'absolute'; spark.style.left = `calc(50% + ${(Math.random() - 0.5) * 500}px)`; spark.style.top = '50%';
+                      const size = Math.random() * 4 + 2;
+                      spark.style.width = `${size}px`; spark.style.height = `${size}px`;
+                      spark.style.background = Math.random() > 0.4 ? '#ffaa00' : '#ffffff';
+                      spark.style.boxShadow = '0 0 10px #ffaa00'; spark.style.borderRadius = '50%';
+                      
+                      const angle = (Math.random() - 0.5) * Math.PI; 
+                      const velocity = Math.random() * 250 + 50;
+                      const tx = Math.cos(angle) * velocity * (Math.random() > 0.5 ? 1 : -1);
+                      const ty = Math.sin(angle) * velocity;
+                      
+                      spark.style.transition = `transform ${Math.random()*0.4 + 0.2}s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 0.5s`;
+                      shutterLayer.appendChild(spark);
+                      
+                      requestAnimationFrame(() => {
+                          spark.style.transform = `translate(${tx}px, ${ty}px) scale(0)`; spark.style.opacity = '0';
+                      });
+                  }
+
+              }, 500); // ⚡ 0.45秒で落ちてくるため、余裕をもって500msの瞬間にドンピシャで衝撃波とシェイクを入れる 
+
+              // --------------------------------------------------------
+              // [ 7.5s ] シャッター開放 ＆ メイン画面出現 (落下開始から2500ms後)
+              // --------------------------------------------------------
+              setTimeout(() => {
+                  
+                  startSystem(false);
+
+                  shutterTop.style.transition = 'transform 0.6s cubic-bezier(0.7,0,0.3,1)';
+                  shutterBottom.style.transition = 'transform 0.6s cubic-bezier(0.7,0,0.3,1)';
+                  shutterTop.style.transform = 'translateY(-100%)';
+                  shutterBottom.style.transform = 'translateY(100%)';
+
+              }, 2500); 
+
+              // --------------------------------------------------------
+              // [ 8.5s ] 掃除 (落下開始から3500ms後)
+              // --------------------------------------------------------
+              setTimeout(() => {
+                  shutterLayer.remove();
+                  if(barContainer) barContainer.remove();
+                  btn.style.pointerEvents = 'auto';
+                  btn.innerText = "[ ⚡ IGNITION ⚡ ]";
+                  btn.style.backgroundColor = "transparent";
+                  btn.style.color = "var(--neon-green)";
+                  btn.style.boxShadow = "0 0 20px rgba(0,255,0,0.2), inset 0 0 10px rgba(0,255,0,0.1)";
+                  btn.style.transform = "scale(1)";
+              }, 3500);
+
+          }, 5000); // プログレスバー完了から一息おいて開始
+      });
 
       // メインUI内からの設定変更
       document.getElementById('btnChangeDir').addEventListener('click', async () => { document.getElementById('settingsModal').style.display = 'none'; try { directoryHandle = await window.showDirectoryPicker(); await saveSetting('dirHandle', directoryHandle); startSystem(true); } catch (e) {} });
@@ -4934,14 +6297,23 @@
 
       // ⚡ 追加: 手動強制同期ボタンのイベント処理（URL未設定時のアラート含む）
       document.getElementById('btnSyncViewer')?.addEventListener('click', async () => {
+          // ⚡ 追加: スマホViewerだけでなく、SHOW VIEWにも強制的に再同期パケットを送る
+          if (typeof TournamentManager !== 'undefined' && typeof ShowViewManager !== 'undefined') {
+              const activeHeatForShow = TournamentManager.heats.find(h => h.status === 'ACTIVE') || TournamentManager.heats.find(h => h.status === 'WAITING');
+              if (activeHeatForShow) {
+                  const sysTitle = document.getElementById('sysTitleInput') ? document.getElementById('sysTitleInput').value : "WTW SHIZUOKA";
+                  ShowViewManager.broadcastState(activeHeatForShow, sysTitle);
+              }
+          }
+
           const url = await loadSetting('viewer_url');
           if (!url || !url.startsWith('https://script.google.com/')) {
-              await showCustomDialog('Live Viewer用の配信URLが設定されていません。\n[ SETTINGS ] から設定してください。', false);
+              await showCustomDialog('SHOW VIEW の同期を完了しました。\n\n※Live Viewer用の配信URLが設定されていないため、クラウドへの送信はスキップしました。', false);
               return;
           }
           await TournamentManager.syncLiveViewer();
-          sysLog('Manual Live Viewer Sync triggered.', 'info');
-          await showCustomDialog('Live Viewer に現在の進行状況を強制同期 (Push) しました。', false);
+          sysLog('Manual Live Viewer & Show View Sync triggered.', 'info');
+          await showCustomDialog('Live Viewer 及び SHOW VIEW に現在の進行状況を強制同期 (Push) しました。', false);
       });
 
       const ceremonyBtns = document.querySelectorAll('#btnPlayCeremony');
@@ -4967,6 +6339,14 @@
               if (SoundManager.ceremonyTimeout) { clearTimeout(SoundManager.ceremonyTimeout); SoundManager.ceremonyTimeout = null; }
               resetCeremonyBtns();
               sysLog('Ceremony stopped manually.');
+              
+              // ⚡ 【Phase 4】 セレモニー停止時は、最新のBracket状態を再送してSHOW VIEWを通常画面に戻す
+              const activeHeatForShow = TournamentManager.heats.find(h => h.status === 'ACTIVE') || TournamentManager.heats.find(h => h.status === 'WAITING');
+              if (activeHeatForShow) {
+                  const sysTitle = document.getElementById('sysTitleInput') ? document.getElementById('sysTitleInput').value : "WTW SHIZUOKA";
+                  ShowViewManager.broadcastState(activeHeatForShow, sysTitle);
+              }
+
           } else {
               triggerRecordEffect("🏆 FINAL RESULT 🏆"); SoundManager.play('fanfare');
               ceremonyBtns.forEach(btn => {
@@ -4986,6 +6366,14 @@
                       }, 50);
                   }
                   SoundManager.play('announce'); SoundManager.ceremonyTimeout = null;
+                  
+                  // ----------------------------------------------------------
+                  // ⚡ 【Phase 4】 サマリー画面への切り替えをブロードキャストする
+                  // ----------------------------------------------------------
+                  const sysTitle = document.getElementById('sysTitleInput') ? document.getElementById('sysTitleInput').value : "WTW SHIZUOKA";
+                  ShowViewManager.broadcastSummary(sysTitle);
+                  sysLog('Summary Report broadcasted to SHOW VIEW.');
+
                   if (SoundManager.activeAudios['announce']) { SoundManager.activeAudios['announce'].addEventListener('ended', resetCeremonyBtns); } 
                   else { setTimeout(resetCeremonyBtns, 5000); }
               }, 2000); 
@@ -5501,6 +6889,42 @@
     });
   }
 
+  // ⚡ 追加: 未登録パイロットのアニメアイコンを生成してフォルダに自動保存する機能
+  const generatingIcons = new Set();
+  async function ensurePilotIcon(pilotName) {
+      if (!iconDirHandle) return; // アイコンフォルダが未接続なら何もしない
+      const safeName = sanitizeFilename(pilotName);
+      if (iconCache[safeName] || iconCache[pilotName] || generatingIcons.has(safeName)) return;
+      
+      // 無効な名前や、「HEAT 1 の 1位」のようなドラフト中間状態の名前を除外
+      if (!safeName || safeName.toUpperCase() === "EMPTY" || safeName.toUpperCase() === "NO_PILOT" || pilotName.includes("の") || pilotName.includes("位")) return;
+
+      generatingIcons.add(safeName);
+
+      try {
+          // ⚡ 修正: スタイルをメカ・ロボット風の「bottts」に変更し、背景をダーク系に設定
+          const url = `https://api.dicebear.com/8.x/bottts/png?seed=${encodeURIComponent(pilotName)}&backgroundColor=111111,1a1a1a,050505&size=256`;
+          const response = await fetch(url);
+          const pngBlob = await response.blob();
+
+          // フォルダに .png ファイルとして書き込む
+          const fileHandle = await iconDirHandle.getFileHandle(`${safeName}.png`, { create: true });
+          const writable = await fileHandle.createWritable();
+          await writable.write(pngBlob);
+          await writable.close();
+
+          // ローカルキャッシュに即座に反映（以降は通信せずにローカルファイルを読む）
+          const file = await fileHandle.getFile();
+          iconCache[safeName] = URL.createObjectURL(file);
+          
+          sysLog(`Auto-Saved Character Icon: ${safeName}.png`, 'info');
+      } catch (e) {
+          console.warn(`Icon auto-save error for ${pilotName}:`, e);
+      } finally {
+          generatingIcons.delete(safeName);
+      }
+  }
+
   async function selectDirectory() { 
     try { 
       directoryHandle = await window.showDirectoryPicker(); 
@@ -5536,7 +6960,7 @@
     document.getElementById('mainUI').style.display = 'flex'; 
     document.getElementById('currentDirName').innerText = `現在: ${directoryHandle.name}`;
     
-    SoundManager.play('startup'); 
+    // （SoundManager.play('startup'); を行ごと削除します）
     if(intervalId) clearInterval(intervalId); 
     intervalId = setInterval(checkDirectory, 3000); 
     checkDirectory();
@@ -6101,8 +7525,12 @@
         const isOverallBest = (data.best * 1000) === lastOverallBestMs ? `<span style="color:var(--neon-cyan); font-weight:bold; margin-left:5px; font-size:10px; border:1px solid; padding:1px 3px;">RECORD</span>` : '';
         
         let iconUrl = iconCache[data.name] || iconCache[sanitizeFilename(data.name)];
-        if (!iconUrl && defaultIconUrl) iconUrl = defaultIconUrl; 
-        const iconHtml = iconUrl ? `<img src="${iconUrl}" class="pilot-icon" alt="">` : `<div class="pilot-icon-fallback">?</div>`;
+        // ⚡ 修正: メカ・ロボット風の「bottts」スタイルを適用
+        if (!iconUrl) {
+            iconUrl = `https://api.dicebear.com/8.x/bottts/png?seed=${encodeURIComponent(data.name)}&backgroundColor=111111,1a1a1a,050505&size=256`;
+            ensurePilotIcon(data.name); // ⚡ 裏側でフォルダにPNGとして保存
+        }
+        const iconHtml = `<img src="${iconUrl}" class="pilot-icon" alt="" style="background-color: #eee;">`;
 
         let gapStr = index > 0 ? `+${(data.best - activeDataBest[index - 1].best).toFixed(2)}` : "-";
         const gapHtml = `<span style="color:#aaa; font-size:11px;">${gapStr}</span>`;
@@ -6126,8 +7554,12 @@
         const flagHtml = data.flag ? `<span class="flag">${data.flag}</span>` : '';
         
         let iconUrl = iconCache[data.name] || iconCache[sanitizeFilename(data.name)];
-        if (!iconUrl && defaultIconUrl) iconUrl = defaultIconUrl; 
-        const iconHtml = iconUrl ? `<img src="${iconUrl}" class="pilot-icon" alt="">` : `<div class="pilot-icon-fallback">?</div>`;
+        // ⚡ 修正: メカ・ロボット風の「bottts」スタイルを適用
+        if (!iconUrl) {
+            iconUrl = `https://api.dicebear.com/8.x/bottts/png?seed=${encodeURIComponent(data.name)}&backgroundColor=111111,1a1a1a,050505&size=256`;
+            ensurePilotIcon(data.name); // ⚡ 裏側でフォルダにPNGとして保存
+        }
+        const iconHtml = `<img src="${iconUrl}" class="pilot-icon" alt="" style="background-color: #eee;">`;
 
         let gapStr = index > 0 ? `+${((data.totalMs - activeDataRace[index - 1].totalMs) / 1000).toFixed(2)}` : "-";
         const gapHtml = `<span style="color:#aaa; font-size:11px;">${gapStr}</span>`;
@@ -6140,6 +7572,15 @@
       });
     }
     prevRankings.best = newBestState; prevRankings.race = newRaceState; rankContainer.scrollTop = currentScrollPos;
+    
+    // ⚡ 追加: 現在の表示モードがDUAL/BEST/RACEの場合は、更新されたランキングをSHOW VIEWへ送る
+    if (typeof ShowViewManager !== 'undefined' && !ShowViewManager.isShowMode) {
+        const sysTitle = document.getElementById('sysTitleInput') ? document.getElementById('sysTitleInput').value : "WTW SHIZUOKA";
+        const btnToggle = document.getElementById('btnViewToggle');
+        if (btnToggle && btnToggle.classList.contains('active-mode')) {
+            ShowViewManager.broadcastRanking(sysTitle, viewToggleModes[currentViewToggleIndex]);
+        }
+    }
   }
 
   async function exportToCloud() {
@@ -6234,7 +7675,8 @@
         tournamentName: sysTitle, 
         qualify: qualData, 
         tournament: tourneyData,
-        lapDetails: lapDetails 
+        lapDetails: lapDetails,
+        icons: window.cloudIconCache || {} // ⚡ 追加: アーカイブ用にも圧縮アイコンデータを一緒に送信する
     };
 
     try {
@@ -6333,6 +7775,12 @@
       
       case 'p': document.getElementById('btnPlayCeremony')?.click(); break;
       case 's': document.getElementById('btnAutoScroll')?.click(); break;
+      
+      // ⚡ 追加: T (Toggle) キーで OBSシーン切り替え
+      case 't':
+        e.preventDefault();
+        OBSManager.toggleScene();
+        break;
       
       case ' ': 
         e.preventDefault(); 
